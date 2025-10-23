@@ -39,6 +39,7 @@ public class Product {
 
     @Override
     public String toString() {
-        return String.format("%s (%s) - $%.2f [%d in stock]", name, category, price, quantity);
+        return String.format("[%s] %s (%s) - $%.2f [%d in stock]",
+                id, name, category, price, quantity);
     }
 }
