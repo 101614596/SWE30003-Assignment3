@@ -1,0 +1,26 @@
+[
+  {
+    "id": "P001",
+    "name": "Milk 1L",
+    "category": "Dairy",
+    "description": "Fresh full cream milk",
+    "price": 2.50,
+    "quantity": 20
+  },
+  {
+    "id": "P002",
+    "name": "Bread Loaf",
+    "category": "Bakery",
+    "description": "Whole grain bread loaf",
+    "price": 3.20,
+    "quantity": 15
+  },
+  {
+    "id": "P003",
+    "name": "Chips 150g",
+    "category": "Snacks",
+    "description": "Sea salt potato chips",
+    "price": 2.80,
+    "quantity": 30
+  }
+]
