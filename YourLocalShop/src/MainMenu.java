@@ -31,7 +31,7 @@ public class MainMenu {
                 case "1" -> catalog.displayAll();
                 case "2" -> inventory.displayInventory();
                 case "3" -> addToCart();
-                case "4" -> cart.displayCart();
+                case "4" -> displayCartAndCheckout();
                 case "5" -> removeFromCart();
                 case "0" -> {
                     System.out.println("Exiting... Thank you!");
@@ -69,4 +69,55 @@ public class MainMenu {
         String productId = scanner.nextLine();
         cart.removeItem(productId);
     }
-}
+
+    //    CHECKOUT
+    private void checkout() {
+        for (CartItem ci : cart.getItems()) {
+            Product p = ci.getProduct();
+            int want = ci.getQuantity();
+            int have = inventory.getStock(p.getId());
+        }
+        for (CartItem ci : cart.getItems()) {
+            inventory.reduceStock(ci.getProduct().getId(), ci.getQuantity());
+        }
+    }
+
+    private void displayCartAndCheckout() {
+        cart.displayCartAndCheckout();
+
+        if (cart.getItems().isEmpty()) {
+            return;
+        }
+        System.out.println("\nPurchase now?");
+        System.out.println("1. Yes");
+        System.out.println("2. No");
+        System.out.print("Select an option: ");
+        String ans = scanner.nextLine().trim();
+//if 1 is selected to purchase, run checkout, print orderID,
+// show total price and clear cart else do nothing and return
+        if ("1".equals(ans)) {
+            try {
+                checkout();
+            } catch (Exception e) {
+                System.out.println("Checkout failed: " + e.getMessage());
+            }
+
+            String orderId = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+            double total = cart.getTotal();
+            System.out.println("\n=== Purchase Successful ===");
+            System.out.println("Order ID: " + orderId);
+            for (CartItem ci : cart.getItems()) {
+                System.out.printf("- %s x%d%n", ci.getProduct().getName(), ci.getQuantity());
+            }
+            System.out.printf("Total: $%.2f%n", total);
+            System.out.println("===========================");
+            cart.clearCart();
+            System.out.println("Cart cleared.");
+        } else {
+            System.out.println("Okay, returning to menu.");
+        }
+
+    }
+    }
+
+
