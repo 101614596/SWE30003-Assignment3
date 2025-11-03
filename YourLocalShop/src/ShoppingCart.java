@@ -57,7 +57,7 @@ public class ShoppingCart {
         return items.stream().mapToDouble(CartItem::getSubtotal).sum();
     }
 
-    public void displayCart() {
+    public void displayCartAndCheckout() {
         System.out.println("\n=== Shopping Cart ===");
         if (items.isEmpty()) {
             System.out.println("Cart is empty.");
