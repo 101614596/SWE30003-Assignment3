@@ -1,3 +1,6 @@
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 public class Product {
     private String id;
     private String name;
@@ -30,11 +33,30 @@ public class Product {
     public void setQuantity(int quantity) {
         this.quantity = quantity;
         this.available = quantity > 0;
+        updateInDatabase(); 
     }
 
     public void setPrice(double price) {
         if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
         this.price = price;
+        updateInDatabase();
+    }
+
+    private void updateInDatabase() {
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        String updateSQL = "UPDATE products SET quantity = ? , available = ?, price = ? WHERE id = ?";
+        try (PreparedStatement pstmt =db.getConnection().prepareStatement(updateSQL)){
+            pstmt.setInt(1, this.quantity);
+            pstmt.setInt(2, this.available ? 1: 0);
+            pstmt.setDouble(3, this.price); 
+            pstmt.setString(4, this.id);
+            pstmt.executeUpdate(); 
+
+
+        } catch (SQLException e) {
+            System.err.println("Error updating product info in database: " +e.getMessage());
+        }
+
     }
 
     @Override
