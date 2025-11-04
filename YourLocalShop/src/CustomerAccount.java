@@ -11,7 +11,6 @@ public class CustomerAccount {
 
     private List<Order> orderHistory;
     private List<Invoice> invoices;
-    private PaymentStrategy paymentMethod;
 
     public CustomerAccount(String username, String password, String name, String email, String phone, String address) {
         this.username = username;
@@ -53,14 +52,6 @@ public class CustomerAccount {
         return invoices;
     }
 
-    // --- Payment ---
-    public void setPaymentMethod(PaymentStrategy method) {
-        this.paymentMethod = method;
-    }
-
-    public PaymentStrategy getPaymentMethod() {
-        return paymentMethod;
-    }
 
     // --- Getters ---
     public String getUsername() { return username; }

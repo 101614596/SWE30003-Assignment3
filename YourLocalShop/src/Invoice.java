@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter;
 
 public class Invoice {
     private Order order;
-    private Customer customer;
+    private CustomerAccount customer;
     private Shipment shipment;
 
     public Invoice(Order order, Customer customer, Shipment shipment) {
