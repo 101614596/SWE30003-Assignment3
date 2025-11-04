@@ -1,5 +1,10 @@
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.xml.crypto.Data;
 
 public class CustomerAccount {
     private String username;
@@ -22,6 +27,56 @@ public class CustomerAccount {
         this.orderHistory = new ArrayList<>();
         this.invoices = new ArrayList<>();
     }
+
+
+    public void saveToDatabase(){
+        DatabaseConnection db = DatabaseConnection.getInstance(); 
+        String insertSQL = "INSERT OR REPLACE INTO customers (username, password, name, email, phone, address) VALUES (?,?,?,?,?,?)"; 
+
+            try (PreparedStatement pstmt = db.getConnection().prepareStatement(insertSQL)){
+                pstmt.setString(1, this.username);
+                pstmt.setString(2, this.password);
+                pstmt.setString(3, this.name); 
+                pstmt.setString(4, this.email);
+                pstmt.setString(5, this.phone);
+                pstmt.setString(6, this.address);
+
+                System.out.println("Customer info saved to database");
+
+            }catch(SQLException e){
+
+                System.err.println("Error saving customer info to database: " +e.getMessage());
+            }
+    
+    }
+
+    public static CustomerAccount loadFromDatabase(String username){
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        String query = "SELECT * FROM customers WHERE username = ?";
+
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(query)){
+            pstmt.setString(1, username);
+            ResultSet rs= pstmt.executeQuery();
+
+            if(rs.next()){
+                return new CustomerAccount(
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    rs.getString("name"),
+                    rs.getString("email"),
+                    rs.getString("phone"),
+                    rs.getString("address")
+                    
+                    );
+            }
+        } catch (SQLException e) {
+            System.err.println("Error loading customer from database: " + e.getMessage());
+        }
+
+        return null; 
+
+    }
+
 
     // --- Authentication ---
     public boolean authenticate(String inputPassword) {
