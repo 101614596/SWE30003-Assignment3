@@ -9,14 +9,14 @@ public class Order {
     private double subtotal;
     private double tax;
     private double total;
-    private Shipment status;
+    private ShipmentStatus status;
     private LocalDateTime orderDate;
 
     public Order(String orderId, CustomerAccount customer) {
         this.orderId = orderId;
         this.customer = customer;
         this.items = new ArrayList<>();
-        this.status = Shipment.PENDING;
+        this.status = ShipmentStatus.PENDING;
         this.orderDate = LocalDateTime.now();
     }
 
@@ -43,7 +43,7 @@ public class Order {
 
     // --- Confirm and generate invoice ---
     public Invoice generateInvoice() {
-        if (status != Shipment.CONFIRMED)
+        if (status != ShipmentStatus.CONFIRMED)
             throw new IllegalStateException("Order must be confirmed before generating invoice.");
 
         return new Invoice(this, customer, null); // Shipment can be added later
@@ -51,7 +51,7 @@ public class Order {
 
     public void confirmOrder() {
         if (items.isEmpty()) throw new IllegalStateException("Cannot confirm an empty order.");
-        this.status = Shipment.CONFIRMED;
+        this.status = ShipmentStatus.CONFIRMED;
     }
 
     // --- Getters ---
@@ -60,7 +60,7 @@ public class Order {
     public double getSubtotal() { return subtotal; }
     public double getTax() { return tax; }
     public double getTotal() { return total; }
-    public OrderStatus getStatus() { return status; }
+    public ShipmentStatus getStatus() { return status; }
     public LocalDateTime getOrderDate() { return orderDate; }
 
     @Override

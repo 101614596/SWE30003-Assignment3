@@ -49,33 +49,33 @@ public class ProductCatalog {
         }
     }
 
-    public void loadProductsDatabase(){
+    public void loadProductsDatabase() {
         products.clear();
-        String query = "SELECT * FROM products" ; 
+        String query = "SELECT * FROM products";
 
-        try (java.sql.Statement stmt = dbConnection.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(query)){
+        try (java.sql.Statement stmt = dbConnection.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(query)) {
 
-            while(rs.next()){
+            while (rs.next()) {
                 Product p = new Product(
-                    rs.getString("ID"),
-                    rs.getString("name"),
-                    rs.getString("category"), 
-                    rs.getString("description"),
-                    rs.getDouble("price"), 
-                    rs.getInt("quantity")
-                ); 
+                        rs.getString("ID"),
+                        rs.getString("name"),
+                        rs.getString("category"),
+                        rs.getString("description"),
+                        rs.getDouble("price"),
+                        rs.getInt("quantity")
+                );
                 products.add(p);
 
 
             }
 
             System.out.println("Loaded:  " + products.size() + " (from database)");
-            
+
         } catch (SQLException e) {
 
             System.err.println("Error loading products from database: " + e.getMessage());
-
         }
+    }
 
     private void syncProductsToDatabase() {
         String insertSQL= "INSERT OR REPLACE INTO products (id, name, category, description,price, quantity, available) VALUES (?,?,?,?,?,?,?)" ;

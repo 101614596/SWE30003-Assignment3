@@ -6,7 +6,7 @@ public class Invoice {
     private CustomerAccount customer;
     private Shipment shipment;
 
-    public Invoice(Order order, Customer customer, Shipment shipment) {
+    public Invoice(Order order, CustomerAccount customer, Shipment shipment) {
         this.order = order;
         this.customer = customer;
         this.shipment = shipment;

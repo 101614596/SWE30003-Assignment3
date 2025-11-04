@@ -3,14 +3,14 @@ import java.time.LocalDateTime;
 public class Shipment {
     private String shipmentId;
     private Order order;
-    private Address deliveryAddress;
+    private String deliveryAddress;
     private String trackingNumber;
     private String carrier;
     private LocalDateTime dispatchDate;
     private LocalDateTime deliveryDate;
     private ShipmentStatus status;
 
-    public Shipment(String shipmentId, Order order, Address deliveryAddress, String carrier) {
+    public Shipment(String shipmentId, Order order, String deliveryAddress, String carrier) {
         this.shipmentId = shipmentId;
         this.order = order;
         this.deliveryAddress = deliveryAddress;
@@ -41,7 +41,7 @@ public class Shipment {
     // --- Getters ---
     public String getShipmentId() { return shipmentId; }
     public Order getOrder() { return order; }
-    public Address getDeliveryAddress() { return deliveryAddress; }
+    public String getDeliveryAddress() { return deliveryAddress; }
     public String getTrackingNumber() { return trackingNumber; }
     public String getCarrier() { return carrier; }
     public ShipmentStatus getStatus() { return status; }
