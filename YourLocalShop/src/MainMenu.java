@@ -72,13 +72,30 @@ public class MainMenu {
 
     //    CHECKOUT
     private void checkout() {
+
+        cart.getItems().removeIf(ci ->{
+            if(ci.isReservationExpired()){
+                System.out.println("Reservation expired for: " + ci.getProduct().getName());
+                return true;
+
+            }
+            return false;
+        }); 
+
+
         for (CartItem ci : cart.getItems()) {
             Product p = ci.getProduct();
             int want = ci.getQuantity();
-            int have = inventory.getStock(p.getId());
+            int available = cart.getInventory().getStock(ci.getProduct().getId());
+            if (available < ci.getQuantity()) {
+                System.out.println("Insufficient stock for: " + ci.getProduct().getName());
+                return;
+            }
         }
+
+        
         for (CartItem ci : cart.getItems()) {
-            inventory.reduceStock(ci.getProduct().getId(), ci.getQuantity());
+           cart.getInventory().reduceStock(ci.getProduct().getId(), ci.getQuantity());
         }
     }
 
@@ -88,6 +105,23 @@ public class MainMenu {
         if (cart.getItems().isEmpty()) {
             return;
         }
+
+        System.out.println("\nSelect Payment Method: ");
+        System.out.println("1. Credit Card");
+        System.out.println("2. Dance");
+        String payChoice = scanner.nextLine().trim();
+        
+        PaymentMethod paymentMethod; 
+
+        if("1".equals(payChoice)){
+            paymentMethod = new Creditcard();
+        }else if ("2".equals(payChoice)){
+            System.out.println("Dance like a maniac");
+        }else {
+            System.out.println("invalid Payment");
+            return; 
+        }
+
         System.out.println("\nPurchase now?");
         System.out.println("1. Yes");
         System.out.println("2. No");

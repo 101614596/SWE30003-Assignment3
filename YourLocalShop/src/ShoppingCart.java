@@ -10,6 +10,8 @@ public class ShoppingCart {
     }
 
     public void addItem(Product product, int quantity) {
+
+        cleanupExpiredReservation();
         int available = inventory.getStock(product.getId());
 
         if (available < quantity) {
@@ -31,6 +33,21 @@ public class ShoppingCart {
         } else {
             System.out.println("Unable to reserve stock for: " + product.getName());
         }
+    }
+
+    private void cleanupExpiredReservation() {
+        List<CartItem> expired = new  ArrayList<>();
+
+        for (CartItem item:items){
+            if (item.isReservationExpired()){
+                expired.add(item) ;
+            }
+        } 
+
+    }
+
+    public InventoryManager getInventory(){
+        return inventory; 
     }
 
 

@@ -1,6 +1,9 @@
 public class Main {
     public static void main(String[] args) {
-        ProductCatalog catalog = new ProductCatalog();
+
+        DatabaseConnection db = DatabaseConnection.getInstance(); 
+
+        ProductCatalog catalog =ProductCatalog.getInstance();
         catalog.loadProducts("src/data/products.json");
 
         InventoryManager inventory = new InventoryManager(catalog);

@@ -7,7 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductCatalog {
+    private static ProductCatalog instance;
     private List<Product> products = new ArrayList<>();
+
+    private ProductCatalog() {}
+    
+    
+    public static ProductCatalog getInstance() {
+        if (instance == null) {
+            instance = new ProductCatalog();
+        }
+        return instance;
+    }
 
     public void loadProducts(String filePath) {
         Gson gson = new Gson();

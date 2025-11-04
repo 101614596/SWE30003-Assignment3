@@ -1,12 +1,21 @@
+import java.time.LocalDateTime;
+
+
 public class CartItem {
     private Product product;
     private int quantity;
-
+    private LocalDateTime reservationTime; 
+    
     public CartItem(Product product, int quantity) {
         this.product = product;
         this.quantity = quantity;
+        this.reservationTime = LocalDateTime.now(); 
     }
 
+    public boolean isReservationExpired(){
+        return LocalDateTime.now().isAfter(reservationTime.plusMinutes(15));
+
+    }
     public Product getProduct() { return product; }
     public int getQuantity() { return quantity; }
 
