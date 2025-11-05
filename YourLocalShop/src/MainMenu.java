@@ -4,6 +4,7 @@ public class MainMenu {
     private final ProductCatalog catalog;
     private final InventoryManager inventory;
     private final ShoppingCart cart;
+
     private final Scanner scanner = new Scanner(System.in);
 
     public MainMenu(ProductCatalog catalog, InventoryManager inventory, ShoppingCart cart) {
@@ -22,6 +23,7 @@ public class MainMenu {
             System.out.println("3. Add Product to Cart");
             System.out.println("4. View Cart");
             System.out.println("5. Remove Item from Cart");
+            System.out.println("6. Admin Login");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -33,6 +35,7 @@ public class MainMenu {
                 case "3" -> addToCart();
                 case "4" -> displayCartAndCheckout();
                 case "5" -> removeFromCart();
+                case "6" -> new Admin(catalog, inventory).start();
                 case "0" -> {
                     System.out.println("Exiting... Thank you!");
                     running = false;

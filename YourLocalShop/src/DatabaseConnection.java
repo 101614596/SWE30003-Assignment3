@@ -138,7 +138,7 @@ public class DatabaseConnection {
                 System.out.println("Database connection close");
             }
         } catch (SQLException e) {
-            System.out.println("Error closign connection: " +e.getMessage());
+            System.out.println("Error closing connection: " +e.getMessage());
         }
     }
 }
