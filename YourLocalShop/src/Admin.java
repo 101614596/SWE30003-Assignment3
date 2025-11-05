@@ -1,4 +1,7 @@
 import java.util.Scanner;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Admin {
 
@@ -55,12 +58,38 @@ public class Admin {
             System.out.println("Added: " + p.getName());
 
     }
-
+//Delete items in db
     private void adminDeleteItem() {
+        System.out.println("\n=== Delete Item ===");
+        System.out.print("Enter product ID to delete: ");
+        String id = scanner.nextLine().trim();
+
+        Product p = catalog.getProductById(id);
+        if (p == null) {
+            System.out.println("No product found with that ID.");
+            return;
+        }
+
+        // remove from catalog list
+        boolean removed = catalog.deleteProductById(id);
+
+        // remove from DB
+        try (PreparedStatement ps = DatabaseConnection.getInstance().getConnection()
+                .prepareStatement("DELETE FROM products WHERE id = ?")) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.out.println("Database delete failed: " + e.getMessage());
+        }
+
+        if (removed) System.out.println("Deleted " + id);
     }
 
-    private void adminEditItem() {
+        private void adminEditItem() {
     }
+
+
+//    Add items criteria
     private String readNonEmpty(String label) {
         while (true) {
             System.out.print(label + ": ");
