@@ -12,10 +12,15 @@ public class DatabaseConnection {
 
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(DB_URL);
+            System.out.println("Database connection established");
             initializeTables();
 
-        }catch(ClassNotFoundException | SQLException e) {
+        }catch(SQLException e) {
             System.err.println("Database connection failed: " + e.getMessage());
+        }catch(ClassNotFoundException e){
+            System.err.println("SQLite JDBC driver not found");
+            System.err.println("Please add sqlite-jdbc JAR to classpath");
+            e.printStackTrace();
         }
 
 
@@ -29,6 +34,9 @@ public class DatabaseConnection {
     }
 
     public Connection getConnection() {
+        if (connection ==null){
+            throw new IllegalStateException("Database connection is not initialized");
+        }
         return connection; 
     }
 
