@@ -129,5 +129,22 @@ public class ProductCatalog {
         for (Product p : products) {
             System.out.println(p);
         }
+
+    }
+//    Add new products via admin page
+    public void adminAddProduct(Product p) {
+        if (getProductById(p.getId()) != null) {
+
+            throw new IllegalArgumentException("ID exists: " + p.getId());
+
+        }
+        products.add(p);
+    }
+    //    Delete existing products via admin apge
+    public boolean deleteProductById(String id) {
+        Product p = getProductById(id);
+        if (p == null) return false;
+        products.remove(p);
+        return true;
     }
 }
