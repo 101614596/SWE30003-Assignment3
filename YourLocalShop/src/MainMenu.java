@@ -112,11 +112,13 @@ public class MainMenu {
         String payChoice = scanner.nextLine().trim();
         
         PaymentMethod paymentMethod; 
+      
 
         if("1".equals(payChoice)){
             paymentMethod = new Creditcard();
         }else if ("2".equals(payChoice)){
             System.out.println("Dance like a maniac");
+            return;
         }else {
             System.out.println("invalid Payment");
             return; 
@@ -127,26 +129,41 @@ public class MainMenu {
         System.out.println("2. No");
         System.out.print("Select an option: ");
         String ans = scanner.nextLine().trim();
+
+
 //if 1 is selected to purchase, run checkout, print orderID,
 // show total price and clear cart else do nothing and return
+        
+
         if ("1".equals(ans)) {
             try {
                 checkout();
+
+                String orderId = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+                double total = cart.getTotal();
+
+                if (paymentMethod.processPayment(total)){
+                        
+                        System.out.println("\n=== Purchase Successful ===");
+                        System.out.println("Payment Method: " + paymentMethod.getPaymentMethod());
+                        System.out.println("Order ID: " + orderId);
+
+                        for (CartItem ci : cart.getItems()) {
+                            System.out.printf("- %s x%d%n", ci.getProduct().getName(), ci.getQuantity());
+                        }
+                        
+                        System.out.printf("Total: $%.2f%n", total);
+                        System.out.println("===========================");
+
+                        cart.clearCart();
+                        System.out.println("Cart cleared.");
+                }else{
+                    System.out.println("Payment Failed");
+                }
             } catch (Exception e) {
                 System.out.println("Checkout failed: " + e.getMessage());
+                e.printStackTrace();
             }
-
-            String orderId = java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-            double total = cart.getTotal();
-            System.out.println("\n=== Purchase Successful ===");
-            System.out.println("Order ID: " + orderId);
-            for (CartItem ci : cart.getItems()) {
-                System.out.printf("- %s x%d%n", ci.getProduct().getName(), ci.getQuantity());
-            }
-            System.out.printf("Total: $%.2f%n", total);
-            System.out.println("===========================");
-            cart.clearCart();
-            System.out.println("Cart cleared.");
         } else {
             System.out.println("Okay, returning to menu.");
         }

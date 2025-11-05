@@ -89,8 +89,8 @@ public class ProductCatalog {
                 pstmt.setString(3, p.getCategory());
                 pstmt.setString(4, p.getDescription());
                 pstmt.setDouble(6, p.getPrice());
-                pstmt.setInt(6, p.getQuantity());
-                pstmt.setInt(7, p.isAvailable()? 1:0);
+                pstmt.setInt(7, p.getQuantity());
+                pstmt.setInt(8, p.isAvailable()? 1:0);
                 pstmt.executeUpdate();
 
             }

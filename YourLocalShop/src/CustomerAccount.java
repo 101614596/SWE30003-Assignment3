@@ -40,12 +40,14 @@ public class CustomerAccount {
                 pstmt.setString(4, this.email);
                 pstmt.setString(5, this.phone);
                 pstmt.setString(6, this.address);
+                pstmt.executeUpdate();
 
                 System.out.println("Customer info saved to database");
 
             }catch(SQLException e){
 
                 System.err.println("Error saving customer info to database: " +e.getMessage());
+                e.printStackTrace();
             }
     
     }

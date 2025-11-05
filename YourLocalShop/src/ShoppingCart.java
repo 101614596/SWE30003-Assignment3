@@ -44,6 +44,12 @@ public class ShoppingCart {
             }
         } 
 
+        for (CartItem item : expired ){
+            items.remove(item);
+            inventory.restock(item.getProduct().getId(), item.getQuantity());
+            System.out.println("Reservation expired for: " + item.getProduct().getName());
+        }
+
     }
 
     public InventoryManager getInventory(){
