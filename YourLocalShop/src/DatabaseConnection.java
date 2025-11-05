@@ -141,4 +141,23 @@ public class DatabaseConnection {
             System.out.println("Error closing connection: " +e.getMessage());
         }
     }
+//    Add item procedure
+    public void insertNewProduct(Product p) {
+        String sql = "INSERT INTO products (id, name, category, description, price, quantity, available) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, p.getId());
+            ps.setString(2, p.getName());
+            ps.setString(3, p.getCategory());
+            ps.setString(4, p.getDescription());
+            ps.setDouble(5, p.getPrice());
+            ps.setInt(6, p.getQuantity());
+            ps.setInt(7, 1); // available flag
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println("DB Insert failed: " + e.getMessage());
+        }
+    }
+
 }

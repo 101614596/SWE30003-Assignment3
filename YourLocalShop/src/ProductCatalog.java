@@ -129,5 +129,15 @@ public class ProductCatalog {
         for (Product p : products) {
             System.out.println(p);
         }
+
+    }
+    public void adminAddProduct(Product p) {
+        if (getProductById(p.getId()) != null) {
+
+            throw new IllegalArgumentException("ID exists: " + p.getId());
+
+        }
+
+        products.add(p);
     }
 }

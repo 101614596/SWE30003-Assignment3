@@ -35,6 +35,25 @@ public class Admin {
     }
 
     private void adminAddItem() {
+            System.out.println("\n=== Add Item ===");
+
+            String id = readNonEmpty("ID");
+            if (catalog.getProductById(id) != null) {
+                System.out.println("ID already exists.");
+                return;
+            }
+
+            String name = readNonEmpty("Name");
+            String category = readNonEmpty("Category");
+            String description = readNonEmpty("Description");
+            double price = readNonNegativeDouble("Price");
+            int quantity = readNonNegativeInt("Quantity");
+
+            Product p = new Product(id, name, category, description, price, quantity);
+            catalog.adminAddProduct(p);
+            DatabaseConnection.getInstance().insertNewProduct(p);
+            System.out.println("Added: " + p.getName());
+
     }
 
     private void adminDeleteItem() {
@@ -42,4 +61,37 @@ public class Admin {
 
     private void adminEditItem() {
     }
+    private String readNonEmpty(String label) {
+        while (true) {
+            System.out.print(label + ": ");
+            String s = scanner.nextLine().trim();
+            if (!s.isEmpty()) return s;
+            System.out.println("Required.");
+        }
+    }
+
+    private int readNonNegativeInt(String label) {
+        while (true) {
+            System.out.print(label + ": ");
+            String s = scanner.nextLine().trim();
+            try {
+                int v = Integer.parseInt(s);
+                if (v >= 0) return v;
+            } catch (NumberFormatException ignored) {}
+            System.out.println("Enter a whole number ≥ 0.");
+        }
+    }
+
+    private double readNonNegativeDouble(String label) {
+        while (true) {
+            System.out.print(label + ": ");
+            String s = scanner.nextLine().trim();
+            try {
+                double v = Double.parseDouble(s);
+                if (v >= 0) return v;
+            } catch (NumberFormatException ignored) {}
+            System.out.println("Enter a number ≥ 0.");
+        }
+    }
+
 }
