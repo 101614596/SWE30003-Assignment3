@@ -35,6 +35,10 @@ public class Product {
         this.available = quantity > 0;
         updateInDatabase(); 
     }
+//   admin edit setters
+    public void setName(String name) { this.name = name; }
+    public void setCategory(String category) { this.category = category; }
+    public void setDescription(String description) { this.description = description; }
 
     public void setPrice(double price) {
         if (price < 0) throw new IllegalArgumentException("Price cannot be negative.");
