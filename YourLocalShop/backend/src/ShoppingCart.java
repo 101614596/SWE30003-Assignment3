@@ -10,11 +10,14 @@ public class ShoppingCart {
         this.inventory = inventory;
     }
 
+
     public void addItem(Product product, int quantity) {
         if (product == null) {
             System.out.println("Invalid product.");
             return;
         }
+
+        cleanExpiredItems();
 
         int available = inventory.getStock(product.getId());
         if (available <= 0) {
@@ -30,15 +33,34 @@ public class ShoppingCart {
         // Check if item already exists in cart
         for (CartItem item : items) {
             if (item.getProduct().getId().equals(product.getId())) {
-                item.setQuantity(item.getQuantity() + quantity);
-                System.out.println(quantity + "x " + product.getName() + " added to cart.");
-                return;
+                if (item.isReservationExpired()) {
+                    inventory.releaseReservation(product.getId(), item.getQuantity());
+                    items.remove(item);
+                    break;
+                }
+
+                int additionalQuantity = quantity;
+                int newTotal = item.getQuantity() + additionalQuantity;
+
+                if (inventory.reserveStock(product.getId(), additionalQuantity)) {
+                    item.setQuantity(newTotal);
+                    item.refreshReservation();
+                    System.out.println(quantity + "x " + product.getName() + " added to cart.");
+                    return;
+                } else {
+                    System.out.println("Cannot reserve additional stock.");
+                    return;
+                }
             }
         }
 
         // Add as new item
-        items.add(new CartItem(product, quantity));
-        System.out.println("Added " + quantity + " x " + product.getName() + " to cart.");
+        if (inventory.reserveStock(product.getId(), quantity)) {
+            items.add(new CartItem(product, quantity));
+            System.out.println("Added " + quantity + " x " + product.getName() + " to cart.");
+        } else {
+            System.out.println("Cannot reserve stock for " + product.getName());
+        }
     }
 
     public void removeItem(String productId) {
@@ -51,6 +73,8 @@ public class ShoppingCart {
         }
 
         if (toRemove != null) {
+            // Release reservation
+            inventory.releaseReservation(productId, toRemove.getQuantity());
             items.remove(toRemove);
             System.out.println("Removed " + toRemove.getProduct().getName() + " from cart.");
         } else {
@@ -58,7 +82,24 @@ public class ShoppingCart {
         }
     }
 
+
+
+    public void cleanExpiredItems() {
+        List<CartItem> expired = new ArrayList<>();
+        for (CartItem item : items) {
+            if (item.isReservationExpired()) {
+                expired.add(item);
+                // Release reserved stock
+                inventory.releaseReservation(item.getProduct().getId(), item.getQuantity());
+                System.out.println("Removed expired item: " + item.getProduct().getName());
+            }
+        }
+        items.removeAll(expired);
+    }
+
     public void displayCartAndCheckout() {
+        cleanExpiredItems();
+
         System.out.println("\n=== Shopping Cart ===");
         if (items.isEmpty()) {
             System.out.println("Your cart is empty.");
@@ -84,6 +125,7 @@ public class ShoppingCart {
     }
 
     public double getTotal() {
+        cleanExpiredItems();
         double total = 0;
         for (CartItem item : items) {
             total += item.getProduct().getPrice() * item.getQuantity();
@@ -91,11 +133,13 @@ public class ShoppingCart {
         return total;
     }
 
-    public List<CartItem> getItems() {
-        return items;
-    }
+    public List<CartItem> getItems() {return items;}
 
     public void clearCart() {
+
+        for ( CartItem item : items) {
+            inventory.restock(item.getProduct().getId(), item.getQuantity());
+        }
         items.clear();
     }
 

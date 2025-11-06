@@ -3,7 +3,7 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/YourLocalShop/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/YourLocalShop/backend/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -11,7 +11,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/YourLocalShop/src/lib/slf4j-api-2.0.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/YourLocalShop/backend/src/lib/gson-2.10.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -20,7 +20,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/YourLocalShop/src/lib/slf4j-simple-2.0.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/YourLocalShop/backend/src/lib/slf4j-api-2.0.9.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -29,7 +29,16 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/YourLocalShop/src/lib/sqlite-jdbc-3.44.1.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/YourLocalShop/backend/src/lib/slf4j-simple-2.0.9.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/YourLocalShop/backend/src/lib/sqlite-jdbc-3.44.1.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

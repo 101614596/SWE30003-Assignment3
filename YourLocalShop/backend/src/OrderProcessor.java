@@ -22,6 +22,9 @@ public class OrderProcessor {
             System.out.println("OrderProcessor: missing cart, customer or payment method.");
             return null;
         }
+
+        cart.cleanExpiredItems();
+
         if (cart.getItems().isEmpty()) {
             System.out.println("OrderProcessor: cart is empty.");
             return null;
@@ -40,12 +43,24 @@ public class OrderProcessor {
         // 2) Create Order and add items
         String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         Order order = new Order(orderId, customer);
-        for (CartItem ci : cart.getItems()) {
-            order.addProduct(ci.getProduct(), ci.getQuantity());
+
+        try{
+            for (CartItem ci : cart.getItems()) {
+                order.addProduct(ci.getProduct(), ci.getQuantity());
+            }
+        }catch(IllegalStateException e){
+            System.out.println("Failed to create order." + e.getMessage());
+            return null;
         }
 
+
         // 3) Confirm order (required before invoice)
-        order.confirmOrder();
+        try{
+            order.confirmOrder();
+        }catch (IllegalStateException e){
+            System.out.println("Failed to create order." + e.getMessage());
+            return null;
+        }
 
         // 4) Charge payment on final total
         double amount = order.getTotal();
@@ -57,7 +72,15 @@ public class OrderProcessor {
 
         // 5) Reduce stock after successful payment
         for (CartItem ci : cart.getItems()) {
-            inventory.reduceStock(ci.getProduct().getId(), ci.getQuantity());
+            boolean reduced= inventory.reduceStock(ci.getProduct().getId(), ci.getQuantity());
+            if(!reduced){
+                System.out.println("Stock reduction failed." +ci.getProduct().getName());
+
+            }else{
+                System.out.printf("Reduced stock: %s - %d%n", ci.getProduct().getName(), ci.getQuantity());
+            }
+
+
         }
 
         // 6) Create shipment
