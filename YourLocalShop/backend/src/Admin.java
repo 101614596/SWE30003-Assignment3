@@ -2,6 +2,7 @@ import java.util.Scanner;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.*;
 
 public class Admin {
 
@@ -85,11 +86,67 @@ public class Admin {
         if (removed) System.out.println("Deleted " + id);
     }
 
-        private void adminEditItem() {
+    private void adminEditItem() {
+        System.out.println("\n=== Edit Item ===");
+        System.out.print("Enter product ID: ");
+        String id = scanner.nextLine().trim();
+
+        Product p = catalog.getProductById(id);
+        if (p == null) {
+            System.out.println("No product found with that ID.");
+            return;
+        }
+
+        System.out.println("Leave blank to keep the same value.");
+
+        System.out.println("Current name: " + p.getName());
+        System.out.print("New name: ");
+        String name = scanner.nextLine().trim();
+        if (!name.isEmpty()) p.setName(name);
+
+        System.out.println("Current category: " + p.getCategory());
+        System.out.print("New category: ");
+        String cat = scanner.nextLine().trim();
+        if (!cat.isEmpty()) p.setCategory(cat);
+
+        System.out.println("Current description: " + p.getDescription());
+        System.out.print("New description: ");
+        String desc = scanner.nextLine().trim();
+        if (!desc.isEmpty()) p.setDescription(desc);
+
+        System.out.println("Current price: " + p.getPrice());
+        System.out.print("New price: ");
+        String priceStr = scanner.nextLine().trim();
+        if (!priceStr.isEmpty()) {
+            try {
+                double price = Double.parseDouble(priceStr);
+                if (price >= 0) p.setPrice(price);
+            } catch (NumberFormatException ignored) {
+                System.out.println("Invalid price ignored.");
+            }
+        }
+
+        System.out.println("Current quantity: " + p.getQuantity());
+        System.out.print("New quantity: ");
+        String qtyStr = scanner.nextLine().trim();
+        if (!qtyStr.isEmpty()) {
+            try {
+                int qty = Integer.parseInt(qtyStr);
+                if (qty >= 0) p.setQuantity(qty);
+            } catch (NumberFormatException ignored) {
+                System.out.println("Invalid quantity ignored.");
+            }
+        }
+
+
+//      updates db after memory changes
+        updateProductInDb(p);
+
+        System.out.println("Updated: " + p.getId());
     }
 
 
-//    Add items criteria
+//    Add items helpers
     private String readNonEmpty(String label) {
         while (true) {
             System.out.print(label + ": ");
@@ -122,5 +179,21 @@ public class Admin {
             System.out.println("Enter a number ≥ 0.");
         }
     }
+//    Edit item helper
+private void updateProductInDb(Product p) {
+    String sql = "UPDATE products SET name=?, category=?, description=?, price=?, quantity=? WHERE id=?";
+    try (PreparedStatement ps = DatabaseConnection.getInstance().getConnection().prepareStatement(sql)) {
+        ps.setString(1, p.getName());
+        ps.setString(2, p.getCategory());
+        ps.setString(3, p.getDescription());
+        ps.setDouble(4, p.getPrice());
+        ps.setInt(5, p.getQuantity());
+        ps.setString(6, p.getId());
+        ps.executeUpdate();
+    } catch (Exception e) {
+        System.out.println("Database update failed: " + e.getMessage());
+    }
+}
+
 
 }

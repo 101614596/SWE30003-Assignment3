@@ -26,6 +26,7 @@ public class MainMenu {
             System.out.println("4. View Cart");
             System.out.println("5. Remove Item from Cart");
             System.out.println("6. Checkout");
+            System.out.println("7. Admin Login");
             System.out.println("0. Exit");
             System.out.print("Select an option: ");
 
@@ -38,6 +39,7 @@ public class MainMenu {
                 case "4" -> cart.displayCartAndCheckout();
                 case "5" -> removeFromCart();
                 case "6" -> checkout();
+                case "7" -> new Admin(catalog, inventory).start();
                 case "0" -> {
                     System.out.println("Goodbye!");
                     return;
@@ -74,7 +76,6 @@ public class MainMenu {
         }
 
         cart.addItem(product, qty);
-        System.out.println("Added " + qty + " x " + product.getName() + " to cart.");
     }
 
     private void removeFromCart() {
