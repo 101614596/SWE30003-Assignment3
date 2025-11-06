@@ -8,6 +8,7 @@ public class MainMenu {
     private ShoppingCart cart;
     private OrderProcessor orderProcessor;
     private StatisticsGenerator statsGen;
+    private Scanner scanner;
 
     public MainMenu(ProductCatalog catalog, InventoryManager inventory, CustomerAccount customer, ShoppingCart cart, OrderProcessor orderProcessor, StatisticsGenerator statsGen) {
         this.catalog = catalog;
@@ -16,6 +17,7 @@ public class MainMenu {
         this.cart = cart;
         this.orderProcessor = orderProcessor;
         this.statsGen = statsGen;
+        this.scanner = new Scanner(System.in);
     }
 
     public void start() {
