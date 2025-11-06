@@ -8,6 +8,25 @@ public class OrderProcessor {
         this.inventory = inventory;
     }
 
+    private final List<Observer> observers = new ArrayList<>();
+
+    public void registerObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    public void notifyObservers(Object event) {
+        for (Observer observer : observers) {
+            observer.notifyUpdate(event);
+        }
+    }
+
+    public void processOrder(Order order) {
+        // your normal order processing logic here…
+        System.out.println("Processing order: " + order.getOrderId());
+        // Notify observers (invoice, shipment, statistics, etc.)
+        notifyObservers(order);
+    }
+
     /**
      * Process the current cart into a paid order with shipment and invoice.
      * - Validates stock

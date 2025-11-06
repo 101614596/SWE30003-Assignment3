@@ -86,6 +86,11 @@ public class Main {
                     System.out.println("✓ Login successful! Welcome back, " + customer.getName());
                 }
 
+                // === Set up order system and observers ===
+                OrderProcessor orderProcessor = new OrderProcessor(inventory, catalog);
+                StatisticsGenerator statsGen = new StatisticsGenerator(); // observer
+                orderProcessor.registerObserver(statsGen);
+
                 MainMenu menu = new MainMenu(catalog, inventory, customer);
                 menu.start();
             }
