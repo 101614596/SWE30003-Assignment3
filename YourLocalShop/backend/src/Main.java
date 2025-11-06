@@ -39,7 +39,7 @@ public class Main {
         try {
             if (choice.equals("1")) {
                 // Start web server
-                WebServer.start(catalog, inventory);
+                Webserver.start(catalog, inventory);
                 System.out.println("\n✓ Web server is running!");
                 System.out.println("✓ Open frontend/index.html in your browser");
                 System.out.println("✓ Press Ctrl+C to stop\n");

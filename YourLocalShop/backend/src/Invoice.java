@@ -12,6 +12,18 @@ public class Invoice {
         this.shipment = shipment;
     }
 
+    public Order getOrder() {
+        return order;
+    }
+
+    public CustomerAccount getCustomer() {
+        return customer;
+    }
+
+    public Shipment getShipment() {
+        return shipment;
+    }
+
     public void displayInvoice() {
         System.out.println("========= INVOICE =========");
         System.out.println("Order ID: " + order.getOrderId());

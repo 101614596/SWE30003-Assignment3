@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WebServer {
+public class Webserver {
     private static final int PORT = 8080;
     private static final Gson gson = new Gson();
     private static ProductCatalog catalog;

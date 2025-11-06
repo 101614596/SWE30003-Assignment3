@@ -1,7 +1,14 @@
 ### IntelliJ IDEA ###
+### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+.idea/
+*.iml
+
+### Database ###
+*.db
+store.db
 
 ### Eclipse ###
 .apt_generated
@@ -27,3 +34,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Java ###
+*.class
+target/

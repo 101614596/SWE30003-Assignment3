@@ -23,9 +23,9 @@ public class InventoryManager {
     public int getStock(String productId) {
 
         int total = stockLevels.getOrDefault(productId, 0);
-        int reserved = stockLevels.getOrDefault(productId, 0);
+        int reserved = reservedStock.getOrDefault(productId, 0);
 
-        return Math.min(0 ,total- reserved);
+        return Math.max(0 ,total- reserved);
     }
 
     public int getTotalStock(String productId) {
@@ -34,7 +34,7 @@ public class InventoryManager {
 
     public boolean reserveStock(String productId, int quantity) {
         int available = getStock(productId);
-        if (available < quantity) {
+        if (available >= quantity) {
             int currentReserved = reservedStock.getOrDefault(productId, 0);
             reservedStock.put(productId, currentReserved + quantity);
             System.out.printf("Reserved %d units of %s%n", quantity, productId);
