@@ -21,7 +21,7 @@ class API {
         } catch (error) {
             console.error('Fetch error:', error);
 
-
+            // More helpful error messages
             if (error.message.includes('Failed to fetch')) {
                 throw new Error('Cannot connect to server. Make sure the backend is running on port 8080.');
             }

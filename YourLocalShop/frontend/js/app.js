@@ -19,7 +19,7 @@ class ShopApp {
             console.log('Loaded products:', this.products);
         } catch (error) {
             console.error('Failed to load products:', error);
-            alert('Failed to load products. Please refresh the page.');
+            this.showError('Failed to load products. Please refresh the page.');
         }
     }
 
@@ -38,19 +38,29 @@ class ShopApp {
         const grid = document.getElementById('product-grid');
         grid.innerHTML = '';
 
+        if (productsToRender.length === 0) {
+            grid.innerHTML = '<p>No products available</p>';
+            return;
+        }
+
         productsToRender.forEach(product => {
             const card = document.createElement('div');
             card.className = 'product-card';
+            const isOutOfStock = product.quantity === 0;
+
             card.innerHTML = `
                 <h3>${product.name}</h3>
                 <p class="category">${product.category}</p>
                 <p>${product.description}</p>
                 <p class="price">$${product.price.toFixed(2)}</p>
-                <p class="stock">${product.quantity} in stock</p>
-                <input type="number" min="1" max="${product.quantity}" value="1" id="qty-${product.id}">
+                <p class="stock" style="color: ${isOutOfStock ? 'red' : '#7f8c8d'}">
+                    ${product.quantity} in stock ${isOutOfStock ? '⚠️' : ''}
+                </p>
+                <input type="number" min="1" max="${product.quantity}" value="1" 
+                       id="qty-${product.id}" ${isOutOfStock ? 'disabled' : ''}>
                 <button class="btn-primary" onclick="app.addToCart('${product.id}')" 
-                        ${product.quantity === 0 ? 'disabled' : ''}>
-                    ${product.quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                        ${isOutOfStock ? 'disabled' : ''}>
+                    ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                 </button>
             `;
             grid.appendChild(card);
@@ -62,7 +72,19 @@ class ShopApp {
         const quantity = parseInt(qtyInput.value);
 
         if (isNaN(quantity) || quantity < 1) {
-            alert('Please enter a valid quantity');
+            this.showError('Please enter a valid quantity');
+            return;
+        }
+
+        // Check local stock first
+        const product = this.products.find(p => p.id === productId);
+        if (!product) {
+            this.showError('Product not found');
+            return;
+        }
+
+        if (product.quantity < quantity) {
+            this.showError(`Only ${product.quantity} units available for ${product.name}`);
             return;
         }
 
@@ -73,14 +95,23 @@ class ShopApp {
 
             this.cart = response;
             this.updateCartDisplay();
-            alert('Item added to cart!');
+
+            // Reload products to get updated stock counts
+            await this.loadProducts();
+            this.renderProducts();
+
+            this.showSuccess(`${product.name} added to cart!`);
 
             // Reset quantity input
             qtyInput.value = 1;
         } catch (error) {
             console.error('Add to cart error:', error);
-            alert('Failed to add item to cart: ' + error.message);
+            this.showError('Failed to add item: ' + error.message);
         }
+
+
+        await this.loadProducts();
+        this.renderProducts();
     }
 
     updateCartDisplay() {
@@ -134,9 +165,15 @@ class ShopApp {
             const response = await API.removeFromCart(productId);
             this.cart = response;
             this.updateCartDisplay();
+
+            // Reload products to restore stock counts
+            await this.loadProducts();
+            this.renderProducts();
+
+            this.showSuccess('Item removed from cart');
         } catch (error) {
             console.error('Remove from cart error:', error);
-            alert('Failed to remove item: ' + error.message);
+            this.showError('Failed to remove item: ' + error.message);
         }
     }
 
@@ -147,6 +184,34 @@ class ShopApp {
 
         // Show requested section
         document.getElementById(sectionId).classList.remove('hidden');
+    }
+
+    // NEW: Show error message to user
+    showError(message) {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-error';
+        toast.textContent = '❌ ' + message;
+        document.body.appendChild(toast);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            toast.classList.add('toast-fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // NEW: Show success message to user
+    showSuccess(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-success';
+        toast.textContent = '✓ ' + message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('toast-fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
     setupEventListeners() {
@@ -197,14 +262,14 @@ class ShopApp {
         accountLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                alert('Account section coming soon!');
+                this.showError('Account section coming soon!');
             });
         });
 
         // Checkout
         document.getElementById('checkout-btn').addEventListener('click', () => {
             if (this.cart.length === 0) {
-                alert('Your cart is empty');
+                this.showError('Your cart is empty');
                 return;
             }
             document.getElementById('checkout-modal').classList.remove('hidden');
@@ -231,9 +296,15 @@ class ShopApp {
         const paymentMethod = document.getElementById('payment-method').value;
 
         if (!paymentMethod) {
-            alert('Please select a payment method');
+            this.showError('Please select a payment method');
             return;
         }
+
+        // Show loading state
+        const submitBtn = document.querySelector('#checkout-form button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
 
         try {
             console.log('Processing checkout...', customerData);
@@ -253,27 +324,39 @@ class ShopApp {
 
                 // Clear form
                 document.getElementById('checkout-form').reset();
+
+                // Reload products
+                await this.loadProducts();
+                this.renderProducts();
             } else {
-                alert('Checkout failed: ' + (invoice.error || 'Unknown error'));
+                this.showError('Checkout failed: ' + (invoice.error || 'Unknown error'));
             }
 
         } catch (error) {
             console.error('Checkout error:', error);
-            alert('Checkout failed: ' + error.message);
+            this.showError('Checkout failed: ' + error.message);
+        } finally {
+            // Restore button state
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
         }
     }
 
     displayInvoice(invoice) {
         const content = document.getElementById('invoice-content');
         content.innerHTML = `
-            <h3>✓ Order Confirmed!</h3>
-            <p><strong>Order #${invoice.orderId}</strong></p>
-            <p>Thank you for your order!</p>
-            <hr>
-            <p><strong>Tracking Number:</strong> ${invoice.trackingNumber}</p>
-            <p><strong>Total:</strong> $${invoice.total.toFixed(2)}</p>
-            <hr>
-            <p>Your order will be delivered to the address provided.</p>
+            <div style="text-align: center;">
+                <h3 style="color: #27ae60; margin-bottom: 1rem;">✓ Order Confirmed!</h3>
+                <p><strong>Order #${invoice.orderId}</strong></p>
+                <p>Thank you for your order!</p>
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #ddd;">
+                <div style="text-align: left; background: #f8f9fa; padding: 1rem; border-radius: 4px; margin: 1rem 0;">
+                    <p><strong>Tracking Number:</strong><br>${invoice.trackingNumber}</p>
+                    <p><strong>Total Paid:</strong><br>$${invoice.total.toFixed(2)}</p>
+                </div>
+                <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid #ddd;">
+                <p style="color: #7f8c8d;">Your order will be delivered to the address provided.</p>
+            </div>
         `;
         document.getElementById('invoice-modal').classList.remove('hidden');
 
@@ -281,8 +364,6 @@ class ShopApp {
             document.getElementById('invoice-modal').classList.add('hidden');
             // Go back to products page
             this.showSection('products');
-            // Reload products to get updated quantities
-            this.loadProducts().then(() => this.renderProducts());
         };
     }
 }

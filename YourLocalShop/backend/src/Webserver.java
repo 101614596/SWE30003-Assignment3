@@ -65,7 +65,6 @@ public class Webserver {
         return sessionCarts.computeIfAbsent(sessionId, k -> new ShoppingCart(inventory));
     }
 
-    // Product Handler
     static class ProductHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -109,7 +108,7 @@ public class Webserver {
         }
     }
 
-    // Cart Handler
+
     static class CartHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -172,7 +171,7 @@ public class Webserver {
         }
     }
 
-    // Order Handler
+
     static class OrderHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -182,9 +181,11 @@ public class Webserver {
                 return;
             }
 
-            System.out.println("Order request: " + exchange.getRequestMethod());
+            String path = exchange.getRequestURI().getPath();
+            System.out.println("Order request: " + exchange.getRequestMethod() + " " + path);
 
-            if ("POST".equals(exchange.getRequestMethod())) {
+            // FIX: Check the correct path
+            if ("POST".equals(exchange.getRequestMethod()) && path.startsWith("/api/orders")) {
                 ShoppingCart cart = getSessionCart(exchange);
 
                 // Parse checkout request
@@ -240,6 +241,9 @@ public class Webserver {
                     e.printStackTrace();
                     sendJsonResponse(exchange, 500, Map.of("error", e.getMessage(), "success", false));
                 }
+            } else {
+                // Invalid method or path
+                sendJsonResponse(exchange, 404, Map.of("error", "Endpoint not found", "success", false));
             }
         }
     }
