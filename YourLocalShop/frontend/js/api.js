@@ -13,43 +13,38 @@ class API {
     }
 
     static async searchProducts(category) {
-        const response = await fetch(`${API_BASE_URL}/products/search?category=${category}`);
+        const response = await fetch(`${API_BASE_URL}/products?category=${category}`);
         return await response.json();
     }
 
     // Cart
     static async addToCart(productId, quantity) {
-        const response = await fetch(`${API_BASE_URL}/cart/add`, {
+        const response = await fetch(`${API_BASE_URL}/cart`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId, quantity }),
-            credentials: 'include' // for session management
+            body: JSON.stringify({ productId, quantity })
         });
         return await response.json();
     }
 
     static async getCart() {
-        const response = await fetch(`${API_BASE_URL}/cart`, {
-            credentials: 'include'
-        });
+        const response = await fetch(`${API_BASE_URL}/cart`);
         return await response.json();
     }
 
     static async removeFromCart(productId) {
-        const response = await fetch(`${API_BASE_URL}/cart/remove/${productId}`, {
-            method: 'DELETE',
-            credentials: 'include'
+        const response = await fetch(`${API_BASE_URL}/cart/${productId}`, {
+            method: 'DELETE'
         });
         return await response.json();
     }
 
     // Checkout
     static async checkout(customerData, paymentMethod) {
-        const response = await fetch(`${API_BASE_URL}/orders/checkout`, {
+        const response = await fetch(`${API_BASE_URL}/orders`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customerData, paymentMethod }),
-            credentials: 'include'
+            body: JSON.stringify({ customerData, paymentMethod })
         });
         return await response.json();
     }
