@@ -2,19 +2,20 @@ import java.util.Scanner;
 
 public class MainMenu {
 
-    private final Scanner scanner = new Scanner(System.in);
-    private final ProductCatalog catalog;
-    private final InventoryManager inventory;
-    private final ShoppingCart cart;
-    private final CustomerAccount currentCustomer;
-    private final OrderProcessor orderProcessor;
+    private ProductCatalog catalog;
+    private InventoryManager inventory;
+    private CustomerAccount customer;
+    private ShoppingCart cart;
+    private OrderProcessor orderProcessor;
+    private StatisticsGenerator statsGen;
 
-    public MainMenu(ProductCatalog catalog, InventoryManager inventory, CustomerAccount customer) {
+    public MainMenu(ProductCatalog catalog, InventoryManager inventory, CustomerAccount customer, ShoppingCart cart, OrderProcessor orderProcessor, StatisticsGenerator statsGen) {
         this.catalog = catalog;
         this.inventory = inventory;
-        this.cart = new ShoppingCart(inventory);
-        this.currentCustomer = customer;
-        this.orderProcessor = new OrderProcessor(inventory);
+        this.customer = customer;
+        this.cart = cart;
+        this.orderProcessor = orderProcessor;
+        this.statsGen = statsGen;
     }
 
     public void start() {

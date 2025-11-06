@@ -1,101 +1,81 @@
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class OrderProcessor {
 
-    private final InventoryManager inventory;
 
-    public OrderProcessor(InventoryManager inventory) {
-        this.inventory = inventory;
+    // === Observer pattern support ===
+    private final List<Observer> observers = new ArrayList<>();
+
+
+    public void registerObserver(Observer observer) {
+        observers.add(observer);
     }
 
-    /**
-     * Process the current cart into a paid order with shipment and invoice.
-     * - Validates stock
-     * - Builds and confirms Order
-     * - Charges PaymentMethod
-     * - Reduces stock
-     * - Creates Shipment and Invoice
-     * - Clears cart
-     */
-    public Invoice process(ShoppingCart cart, CustomerAccount customer, PaymentMethod paymentMethod) {
-        if (cart == null || customer == null || paymentMethod == null) {
-            System.out.println("OrderProcessor: missing cart, customer or payment method.");
-            return null;
+
+    public void notifyObservers(Object event) {
+        for (Observer observer : observers) {
+            observer.notifyUpdate(event);
         }
+    }
 
-        cart.cleanExpiredItems();
 
-        if (cart.getItems().isEmpty()) {
-            System.out.println("OrderProcessor: cart is empty.");
-            return null;
-        }
+    // === Core functionality ===
+    private final InventoryManager inventory;
+    private final ProductCatalog catalog;
 
-        // 1) Validate stock first
-        for (CartItem ci : cart.getItems()) {
-            int available = cart.getInventory().getStock(ci.getProduct().getId());
-            if (available < ci.getQuantity()) {
-                System.out.printf("OrderProcessor: insufficient stock for %s (want %d, have %d)%n",
-                        ci.getProduct().getName(), ci.getQuantity(), available);
-                return null;
+
+    public OrderProcessor(InventoryManager inventory, ProductCatalog catalog) {
+        this.inventory = inventory;
+        this.catalog = catalog;
+    }
+
+
+    public boolean processOrder(Order order) {
+        System.out.println("\n=== Processing Order " + order.getOrderId() + " ===");
+
+
+        // Step 1: Check stock availability
+        for (OrderItem item : order.getItems()) {
+            Product p = item.getProduct();
+            int currentStock = inventory.getStock(p.getId());
+
+
+            if (currentStock < item.getQuantity()) {
+                System.out.println("❌ Not enough stock for " + p.getName());
+                return false;
             }
         }
 
-        // 2) Create Order and add items
-        String orderId = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        Order order = new Order(orderId, customer);
 
-        try{
-            for (CartItem ci : cart.getItems()) {
-                order.addProduct(ci.getProduct(), ci.getQuantity());
-            }
-        }catch(IllegalStateException e){
-            System.out.println("Failed to create order." + e.getMessage());
-            return null;
+        // Step 2: Deduct stock
+        for (OrderItem item : order.getItems()) {
+            Product p = item.getProduct();
+            inventory.decreaseStock(p.getId(), item.getQuantity());
         }
 
 
-        // 3) Confirm order (required before invoice)
-        try{
-            order.confirmOrder();
-        }catch (IllegalStateException e){
-            System.out.println("Failed to create order." + e.getMessage());
-            return null;
-        }
-
-        // 4) Charge payment on final total
-        double amount = order.getTotal();
-        boolean paid = paymentMethod.processPayment(amount);
-        if (!paid) {
-            System.out.println("OrderProcessor: payment failed.");
-            return null;
-        }
-
-        // 5) Reduce stock after successful payment
-        for (CartItem ci : cart.getItems()) {
-            boolean reduced= inventory.reduceStock(ci.getProduct().getId(), ci.getQuantity());
-            if(!reduced){
-                System.out.println("Stock reduction failed." +ci.getProduct().getName());
-
-            }else{
-                System.out.printf("Reduced stock: %s - %d%n", ci.getProduct().getName(), ci.getQuantity());
-            }
+        // Step 3: Calculate total and confirm payment (simulation)
+        double total = order.getTotalPrice();
+        System.out.println("💳 Payment of $" + total + " processed successfully.");
 
 
-        }
+        // Step 4: Generate invoice and shipment
+        Invoice invoice = new Invoice(order);
+        Shipment shipment = new Shipment(order);
 
-        // 6) Create shipment
-        String shipmentId = "SHP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        Shipment shipment = new Shipment(shipmentId, order, customer.getAddress(), "AUSPOST");
-        shipment.updateStatus(ShipmentStatus.CONFIRMED);
 
-        // 7) Create invoice and attach to customer history
-        Invoice invoice = new Invoice(order, customer, shipment);
-        customer.addOrder(order);
-        customer.addInvoice(invoice);
+        System.out.println("📄 Invoice generated: " + invoice.getInvoiceId());
+        System.out.println("🚚 Shipment created for order " + order.getOrderId());
 
-        // 8) Clear cart
-        cart.clearCart();
 
-        return invoice;
+        // Step 5: Notify observers (StatisticsGenerator, etc.)
+        notifyObservers(order);
+
+
+        System.out.println("✅ Order " + order.getOrderId() + " completed.\n");
+        return true;
     }
 }
