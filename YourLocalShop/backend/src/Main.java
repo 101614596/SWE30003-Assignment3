@@ -3,6 +3,9 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        System.out.println("=== Your Local Shop ===");
+        System.out.println("Starting system...\n");
+
         // Initialize database
         DatabaseConnection db = null;
         try {
@@ -24,54 +27,71 @@ public class Main {
             finalDb.close();
         }));
 
-        // Main menu selection
+        // Ask user which mode to run
         Scanner scanner = new Scanner(System.in);
-        System.out.println("=== Your Local Shop ===");
-        System.out.println("1. Customer Portal");
-        System.out.println("2. Admin Portal");
-        System.out.print("Select portal: ");
+        System.out.println("Select mode:");
+        System.out.println("1. Web Server (for frontend)");
+        System.out.println("2. Console Mode (Customer Portal)");
+        System.out.println("3. Console Mode (Admin Portal)");
+        System.out.print("Choice: ");
         String choice = scanner.nextLine();
 
-        if (choice.equals("2")) {
-            // Admin portal
-            Admin admin = new Admin(catalog, inventory);
-            admin.start();
-        } else {
-            // Customer portal
-            System.out.println("\n=== Customer Login ===");
-            System.out.print("Username: ");
-            String username = scanner.nextLine();
+        try {
+            if (choice.equals("1")) {
+                // Start web server
+                WebServer.start(catalog, inventory);
+                System.out.println("\n✓ Web server is running!");
+                System.out.println("✓ Open frontend/index.html in your browser");
+                System.out.println("✓ Press Ctrl+C to stop\n");
 
-            CustomerAccount customer = CustomerAccount.loadFromDatabase(username);
+                // Keep server running
+                Thread.currentThread().join();
 
-            if (customer == null) {
-                System.out.println("Account not found. Creating new account...");
-                System.out.print("Password: ");
-                String password = scanner.nextLine();
-                System.out.print("Full Name: ");
-                String name = scanner.nextLine();
-                System.out.print("Email: ");
-                String email = scanner.nextLine();
-                System.out.print("Phone: ");
-                String phone = scanner.nextLine();
-                System.out.print("Address: ");
-                String address = scanner.nextLine();
+            } else if (choice.equals("3")) {
+                // Admin console mode
+                Admin admin = new Admin(catalog, inventory);
+                admin.start();
 
-                customer = new CustomerAccount(username, password, name, email, phone, address);
-                customer.saveToDatabase();
-                System.out.println("✓ Account created successfully!");
             } else {
-                System.out.print("Password: ");
-                String password = scanner.nextLine();
-                if (!customer.authenticate(password)) {
-                    System.out.println("Invalid password!");
-                    System.exit(0);
-                }
-                System.out.println("✓ Login successful! Welcome back, " + customer.getName());
-            }
+                // Customer console mode
+                System.out.println("\n=== Customer Login ===");
+                System.out.print("Username: ");
+                String username = scanner.nextLine();
 
-            MainMenu menu = new MainMenu(catalog, inventory, customer);
-            menu.start();
+                CustomerAccount customer = CustomerAccount.loadFromDatabase(username);
+
+                if (customer == null) {
+                    System.out.println("Account not found. Creating new account...");
+                    System.out.print("Password: ");
+                    String password = scanner.nextLine();
+                    System.out.print("Full Name: ");
+                    String name = scanner.nextLine();
+                    System.out.print("Email: ");
+                    String email = scanner.nextLine();
+                    System.out.print("Phone: ");
+                    String phone = scanner.nextLine();
+                    System.out.print("Address: ");
+                    String address = scanner.nextLine();
+
+                    customer = new CustomerAccount(username, password, name, email, phone, address);
+                    customer.saveToDatabase();
+                    System.out.println("✓ Account created successfully!");
+                } else {
+                    System.out.print("Password: ");
+                    String password = scanner.nextLine();
+                    if (!customer.authenticate(password)) {
+                        System.out.println("Invalid password!");
+                        System.exit(0);
+                    }
+                    System.out.println("✓ Login successful! Welcome back, " + customer.getName());
+                }
+
+                MainMenu menu = new MainMenu(catalog, inventory, customer);
+                menu.start();
+            }
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
         }
 
         scanner.close();
