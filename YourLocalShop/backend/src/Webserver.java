@@ -1,3 +1,4 @@
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
@@ -12,7 +13,7 @@ import java.util.Map;
 
 public class Webserver {
     private static final int PORT = 8080;
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();;
     private static ProductCatalog catalog;
     private static InventoryManager inventory;
 
@@ -59,6 +60,7 @@ public class Webserver {
     // Helper method to get session cart
     private static ShoppingCart getSessionCart(HttpExchange exchange) {
         String sessionId = exchange.getRemoteAddress().toString(); // Simple session tracking
+        System.out.println("Session ID: " + sessionId);
         return sessionCarts.computeIfAbsent(sessionId, k -> new ShoppingCart(inventory));
     }
 
@@ -75,13 +77,17 @@ public class Webserver {
             String path = exchange.getRequestURI().getPath();
             String query = exchange.getRequestURI().getQuery();
 
+            System.out.println("Product request: " + exchange.getRequestMethod() + " " + path + (query != null ? "?" + query : ""));
+
             if ("GET".equals(exchange.getRequestMethod())) {
                 if (path.equals("/api/products")) {
                     // Get all products or search by category
                     if (query != null && query.startsWith("category=")) {
                         String category = query.substring(9);
+                        System.out.println("Filtering by category: " + category);
                         sendJsonResponse(exchange, 200, catalog.searchByCategory(category));
                     } else {
+                        System.out.println("Returning all products");
                         sendJsonResponse(exchange, 200, catalog.getAllProducts());
                     }
                 } else {
@@ -89,6 +95,7 @@ public class Webserver {
                     String[] parts = path.split("/");
                     if (parts.length > 3) {
                         String productId = parts[3];
+                        System.out.println("Getting product: " + productId);
                         Product product = catalog.getProductById(productId);
                         if (product != null) {
                             sendJsonResponse(exchange, 200, product);
@@ -113,35 +120,52 @@ public class Webserver {
 
             ShoppingCart cart = getSessionCart(exchange);
             String method = exchange.getRequestMethod();
+            String path = exchange.getRequestURI().getPath();
+
+            System.out.println("Cart request: " + method + " " + path);
 
             if ("GET".equals(method)) {
                 // Return cart items
+                System.out.println("Returning cart with " + cart.getItems().size() + " items");
                 sendJsonResponse(exchange, 200, cart.getItems());
 
             } else if ("POST".equals(method)) {
                 // Add item to cart
                 String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-                Map<String, Object> request = gson.fromJson(body, Map.class);
+                System.out.println("Cart POST body: " + body);
 
-                String productId = (String) request.get("productId");
-                int quantity = ((Double) request.get("quantity")).intValue();
+                try {
+                    Map<String, Object> request = gson.fromJson(body, Map.class);
+                    String productId = (String) request.get("productId");
+                    int quantity = ((Double) request.get("quantity")).intValue();
 
-                Product product = catalog.getProductById(productId);
-                if (product != null) {
-                    cart.addItem(product, quantity);
-                    sendJsonResponse(exchange, 200, cart.getItems());
-                } else {
-                    sendJsonResponse(exchange, 404, Map.of("error", "Product not found"));
+                    System.out.println("Adding to cart: " + productId + " x " + quantity);
+
+                    Product product = catalog.getProductById(productId);
+                    if (product != null) {
+                        cart.addItem(product, quantity);
+                        System.out.println("Cart now has " + cart.getItems().size() + " items");
+                        sendJsonResponse(exchange, 200, cart.getItems());
+                    } else {
+                        System.out.println("Product not found: " + productId);
+                        sendJsonResponse(exchange, 404, Map.of("error", "Product not found"));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error adding to cart: " + e.getMessage());
+                    e.printStackTrace();
+                    sendJsonResponse(exchange, 400, Map.of("error", e.getMessage()));
                 }
 
             } else if ("DELETE".equals(method)) {
                 // Remove item from cart
-                String path = exchange.getRequestURI().getPath();
                 String[] parts = path.split("/");
-                if (parts.length > 4) {
-                    String productId = parts[4];
+                if (parts.length > 3) {
+                    String productId = parts[3];
+                    System.out.println("Removing from cart: " + productId);
                     cart.removeItem(productId);
                     sendJsonResponse(exchange, 200, cart.getItems());
+                } else {
+                    sendJsonResponse(exchange, 400, Map.of("error", "Product ID required"));
                 }
             }
         }
@@ -157,48 +181,63 @@ public class Webserver {
                 return;
             }
 
+            System.out.println("Order request: " + exchange.getRequestMethod());
+
             if ("POST".equals(exchange.getRequestMethod())) {
                 ShoppingCart cart = getSessionCart(exchange);
 
                 // Parse checkout request
                 String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-                Map<String, Object> request = gson.fromJson(body, Map.class);
+                System.out.println("Checkout request body: " + body);
 
-                Map<String, String> customerData = (Map<String, String>) request.get("customerData");
-                String paymentMethodType = (String) request.get("paymentMethod");
+                try {
+                    Map<String, Object> request = gson.fromJson(body, Map.class);
 
-                // Create customer account
-                CustomerAccount customer = new CustomerAccount(
-                        customerData.get("email"), // using email as username
-                        "temp_password", // In production, handle this properly
-                        customerData.get("name"),
-                        customerData.get("email"),
-                        customerData.get("phone"),
-                        customerData.get("address")
-                );
+                    Map<String, String> customerData = (Map<String, String>) request.get("customerData");
+                    String paymentMethodType = (String) request.get("paymentMethod");
 
-                // Create payment method
-                PaymentMethod paymentMethod = new Creditcard(); // Only credit card for now
+                    System.out.println("Processing order for: " + customerData.get("name"));
 
-                // Process order
-                OrderProcessor processor = new OrderProcessor(inventory);
-                Invoice invoice = processor.process(cart, customer, paymentMethod);
+                    // Create customer account
+                    CustomerAccount customer = new CustomerAccount(
+                            customerData.get("email"), // using email as username
+                            "temp_password", // In production, handle this properly
+                            customerData.get("name"),
+                            customerData.get("email"),
+                            customerData.get("phone"),
+                            customerData.get("address")
+                    );
 
-                if (invoice != null) {
-                    // Create response with invoice details
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("orderId", invoice.getOrder().getOrderId());
-                    response.put("trackingNumber", invoice.getShipment().getTrackingNumber());
-                    response.put("total", invoice.getOrder().getTotal());
-                    response.put("success", true);
+                    // Create payment method
+                    PaymentMethod paymentMethod = new Creditcard(); // Only credit card for now
 
-                    sendJsonResponse(exchange, 200, response);
+                    // Process order
+                    OrderProcessor processor = new OrderProcessor(inventory);
+                    Invoice invoice = processor.process(cart, customer, paymentMethod);
 
-                    // Clear the session cart
-                    String sessionId = exchange.getRemoteAddress().toString();
-                    sessionCarts.remove(sessionId);
-                } else {
-                    sendJsonResponse(exchange, 400, Map.of("error", "Order processing failed"));
+                    if (invoice != null) {
+                        // Create response with invoice details
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("orderId", invoice.getOrder().getOrderId());
+                        response.put("trackingNumber", invoice.getShipment().getTrackingNumber());
+                        response.put("total", invoice.getOrder().getTotal());
+                        response.put("success", true);
+
+                        System.out.println("Order completed: " + invoice.getOrder().getOrderId());
+
+                        sendJsonResponse(exchange, 200, response);
+
+                        // Clear the session cart
+                        String sessionId = exchange.getRemoteAddress().toString();
+                        sessionCarts.remove(sessionId);
+                    } else {
+                        System.out.println("Order processing failed");
+                        sendJsonResponse(exchange, 400, Map.of("error", "Order processing failed", "success", false));
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing order: " + e.getMessage());
+                    e.printStackTrace();
+                    sendJsonResponse(exchange, 500, Map.of("error", e.getMessage(), "success", false));
                 }
             }
         }
