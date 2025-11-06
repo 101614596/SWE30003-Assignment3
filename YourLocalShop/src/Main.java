@@ -23,9 +23,19 @@ public class Main {
             System.out.println("\nShutting down");
             finalDb.close();
         }));
+
+        //TODO: change from dummy customer account to a login system
+        CustomerAccount customer = new CustomerAccount(
+                "CUST001",
+                "password123",
+                "John Doe",
+                "john.doe@example.com",
+                "0400000000",
+                "123 Main Street, Hawthorn"
+        );
         
         
-        MainMenu menu = new MainMenu(catalog, inventory, cart);
+        MainMenu menu = new MainMenu(catalog, inventory, customer);
         menu.start();
     }
 }
