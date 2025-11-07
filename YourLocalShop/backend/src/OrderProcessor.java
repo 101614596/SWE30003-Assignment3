@@ -25,9 +25,9 @@ public class OrderProcessor {
     }
 
     public void processOrder(Order order) {
-        // your normal order processing logic here…
+
         System.out.println("Processing order: " + order.getOrderId());
-        // Notify observers (invoice, shipment, statistics, etc.)
+
         notifyObservers(order);
     }
 

@@ -29,6 +29,7 @@ public class Webserver {
         catalog = cat;
         inventory = inv;
 
+
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
 
         // Enable CORS for all endpoints

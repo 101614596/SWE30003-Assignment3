@@ -14,6 +14,9 @@ public class InsufficientStockException extends Exception {
     }
 
     //getters
+    public String getProductId() { return productId; }
+    public int getRequested() { return requested; }
+    public int getAvailable() { return available; }
 
 
 
