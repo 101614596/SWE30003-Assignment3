@@ -3,8 +3,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.crypto.Data;
+import exceptions.InvalidCredentialsException;
 
 public class CustomerAccount {
     private String username;
@@ -28,28 +27,25 @@ public class CustomerAccount {
         this.invoices = new ArrayList<>();
     }
 
-
     public void saveToDatabase(){
-        DatabaseConnection db = DatabaseConnection.getInstance(); 
-        String insertSQL = "INSERT OR REPLACE INTO customers (username, password, name, email, phone, address) VALUES (?,?,?,?,?,?)"; 
+        DatabaseConnection db = DatabaseConnection.getInstance();
+        String insertSQL = "INSERT OR REPLACE INTO customers (username, password, name, email, phone, address) VALUES (?,?,?,?,?,?)";
 
-            try (PreparedStatement pstmt = db.getConnection().prepareStatement(insertSQL)){
-                pstmt.setString(1, this.username);
-                pstmt.setString(2, this.password);
-                pstmt.setString(3, this.name); 
-                pstmt.setString(4, this.email);
-                pstmt.setString(5, this.phone);
-                pstmt.setString(6, this.address);
-                pstmt.executeUpdate();
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(insertSQL)){
+            pstmt.setString(1, this.username);
+            pstmt.setString(2, this.password);
+            pstmt.setString(3, this.name);
+            pstmt.setString(4, this.email);
+            pstmt.setString(5, this.phone);
+            pstmt.setString(6, this.address);
+            pstmt.executeUpdate();
 
-                System.out.println("Customer info saved to database");
+            System.out.println("Customer info saved to database");
 
-            }catch(SQLException e){
-
-                System.err.println("Error saving customer info to database: " +e.getMessage());
-                e.printStackTrace();
-            }
-    
+        } catch(SQLException e){
+            System.err.println("Error saving customer info to database: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public static CustomerAccount loadFromDatabase(String username){
@@ -58,31 +54,30 @@ public class CustomerAccount {
 
         try (PreparedStatement pstmt = db.getConnection().prepareStatement(query)){
             pstmt.setString(1, username);
-            ResultSet rs= pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
             if(rs.next()){
                 return new CustomerAccount(
-                    rs.getString("username"),
-                    rs.getString("password"),
-                    rs.getString("name"),
-                    rs.getString("email"),
-                    rs.getString("phone"),
-                    rs.getString("address")
-                    
-                    );
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("phone"),
+                        rs.getString("address")
+                );
             }
         } catch (SQLException e) {
             System.err.println("Error loading customer from database: " + e.getMessage());
         }
 
-        return null; 
-
+        return null;
     }
 
-
-    // --- Authentication ---
-    public boolean authenticate(String inputPassword) {
-        return this.password.equals(inputPassword);
+    // --- Authentication --- MODIFIED to throw exception
+    public void authenticate(String inputPassword) throws InvalidCredentialsException {
+        if (!this.password.equals(inputPassword)) {
+            throw new InvalidCredentialsException("Invalid password for user: " + this.username);
+        }
     }
 
     // --- Personal Info ---
@@ -109,7 +104,6 @@ public class CustomerAccount {
         return invoices;
     }
 
-
     // --- Getters ---
     public String getUsername() { return username; }
     public String getName() { return name; }
@@ -123,4 +117,3 @@ public class CustomerAccount {
                 name, username, email, phone, address);
     }
 }
-

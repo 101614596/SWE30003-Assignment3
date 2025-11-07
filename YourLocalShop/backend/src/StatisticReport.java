@@ -20,7 +20,7 @@ public class StatisticReport {
         Map<String, Integer> productSales = new HashMap<>();
 
         for (Order order : orders) {
-            totalRevenue += order.getTotalPrice();
+            totalRevenue += order.getTotal();
             for (OrderItem item : order.getItems()) {
                 String productName = item.getProduct().getName();
                 productSales.put(productName,
@@ -41,7 +41,7 @@ public class StatisticReport {
     // Show inventory insights
     public void generateStockSummary() {
         System.out.println("\n=== Inventory Summary ===");
-        for (Product p : catalog.getProducts()) {
+        for (Product p : catalog.getAllProducts()) {
             int stock = inventory.getStock(p.getId());
             if (stock < 5)
                 System.out.println(p.getName() + " - LOW STOCK (" + stock + ")");

@@ -12,6 +12,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDateTime;
 
+import exceptions.InsufficientStockException;
+import exceptions.PaymentProcessException;
+import builders.InvoiceBuilder;
+import builders.ShipmentBuilder;
+
+
 public class Webserver {
     private static final int PORT = 8080;
     private static final Gson gson = new GsonBuilder().registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();;
@@ -184,7 +190,6 @@ public class Webserver {
             String path = exchange.getRequestURI().getPath();
             System.out.println("Order request: " + exchange.getRequestMethod() + " " + path);
 
-            // FIX: Check the correct path
             if ("POST".equals(exchange.getRequestMethod()) && path.startsWith("/api/orders")) {
                 ShoppingCart cart = getSessionCart(exchange);
 
@@ -213,11 +218,13 @@ public class Webserver {
                     // Create payment method
                     PaymentMethod paymentMethod = new Creditcard(); // Only credit card for now
 
-                    // Process order
+                    // Process order - MODIFIED to handle exceptions
                     OrderProcessor processor = new OrderProcessor(inventory);
-                    Invoice invoice = processor.process(cart, customer, paymentMethod);
+                    Invoice invoice;
 
-                    if (invoice != null) {
+                    try {
+                        invoice = processor.process(cart, customer, paymentMethod);
+
                         // Create response with invoice details
                         Map<String, Object> response = new HashMap<>();
                         response.put("orderId", invoice.getOrder().getOrderId());
@@ -232,14 +239,28 @@ public class Webserver {
                         // Clear the session cart
                         String sessionId = exchange.getRemoteAddress().toString();
                         sessionCarts.remove(sessionId);
-                    } else {
-                        System.out.println("Order processing failed");
-                        sendJsonResponse(exchange, 400, Map.of("error", "Order processing failed", "success", false));
+
+                    } catch (InsufficientStockException e) {
+                        System.out.println("Order failed - insufficient stock: " + e.getMessage());
+                        sendJsonResponse(exchange, 400, Map.of(
+                                "error", "Insufficient stock: " + e.getMessage(),
+                                "success", false
+                        ));
+                    } catch (PaymentProcessException e) {
+                        System.out.println("Order failed - payment error: " + e.getMessage());
+                        sendJsonResponse(exchange, 400, Map.of(
+                                "error", "Payment failed: " + e.getMessage(),
+                                "success", false
+                        ));
                     }
+
                 } catch (Exception e) {
                     System.err.println("Error processing order: " + e.getMessage());
                     e.printStackTrace();
-                    sendJsonResponse(exchange, 500, Map.of("error", e.getMessage(), "success", false));
+                    sendJsonResponse(exchange, 500, Map.of(
+                            "error", "Server error: " + e.getMessage(),
+                            "success", false
+                    ));
                 }
             } else {
                 // Invalid method or path

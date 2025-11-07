@@ -15,7 +15,7 @@ public class StatisticsGenerator implements Observer {
 
     private void updateSalesData(Order order) {
         totalOrders++;
-        totalRevenue += order.getTotalPrice();
+        totalRevenue += order.getTotal();
 
         for (OrderItem item : order.getItems()) {
             String productName = item.getProduct().getName();

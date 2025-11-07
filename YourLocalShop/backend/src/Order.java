@@ -1,6 +1,7 @@
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import builders.InvoiceBuilder;
 
 public class Order {
     private String orderId;
@@ -46,7 +47,10 @@ public class Order {
         if (status != ShipmentStatus.CONFIRMED)
             throw new IllegalStateException("Order must be confirmed before generating invoice.");
 
-        return new Invoice(this, customer, null); // Shipment can be added later
+        return new InvoiceBuilder()
+                .setOrder(this)
+                .setCustomer(customer)
+                .build();
     }
 
     public void confirmOrder() {

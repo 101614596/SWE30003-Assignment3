@@ -1,5 +1,6 @@
 import java.util.Scanner;
-
+import exceptions.InsufficientStockException;
+import exceptions.PaymentProcessException;
 public class MainMenu {
 
     private ProductCatalog catalog;
@@ -10,13 +11,14 @@ public class MainMenu {
     private StatisticsGenerator statsGen;
     private Scanner scanner;
 
-    public MainMenu(ProductCatalog catalog, InventoryManager inventory, CustomerAccount customer, ShoppingCart cart, OrderProcessor orderProcessor, StatisticsGenerator statsGen) {
+    public MainMenu(ProductCatalog catalog, InventoryManager inventory, CustomerAccount customer) {
         this.catalog = catalog;
         this.inventory = inventory;
         this.customer = customer;
-        this.cart = cart;
-        this.orderProcessor = orderProcessor;
-        this.statsGen = statsGen;
+        this.cart = new ShoppingCart(inventory);
+        this.orderProcessor = new OrderProcessor(inventory);
+        this.statsGen = new StatisticsGenerator();
+        this.orderProcessor.registerObserver(statsGen);
         this.scanner = new Scanner(System.in);
     }
 
@@ -52,6 +54,7 @@ public class MainMenu {
         }
     }
 
+    // MODIFIED - now handles exception
     private void addToCart() {
         catalog.displayAll();
         System.out.print("Enter Product ID to add: ");
@@ -72,13 +75,12 @@ public class MainMenu {
             return;
         }
 
-        int available = inventory.getStock(productId);
-        if (available < qty) {
-            System.out.println("Not enough stock available.");
-            return;
+        try {
+            cart.addItem(product, qty);
+        } catch (InsufficientStockException e) {
+            System.out.println("Error: " + e.getMessage());
+            System.out.println("Available stock: " + inventory.getStock(productId));
         }
-
-        cart.addItem(product, qty);
     }
 
     private void removeFromCart() {
@@ -88,6 +90,7 @@ public class MainMenu {
         cart.removeItem(productId);
     }
 
+    // MODIFIED - now handles exceptions
     private void checkout() {
         if (cart.getItems().isEmpty()) {
             System.out.println("Your cart is empty.");
@@ -108,13 +111,19 @@ public class MainMenu {
         }
 
         System.out.println("\nProcessing order...");
-        Invoice invoice = orderProcessor.process(cart, currentCustomer, paymentMethod);
 
-        if (invoice != null) {
+        try {
+            Invoice invoice = orderProcessor.process(cart, customer, paymentMethod);
             System.out.println("\n=== Order Completed ===");
             invoice.displayInvoice();
-        } else {
-            System.out.println("Order failed. Please try again.");
+        } catch (InsufficientStockException e) {
+            System.out.println("Order failed - Insufficient stock:");
+            System.out.println(e.getMessage());
+        } catch (PaymentProcessException e) {
+            System.out.println("Order failed - Payment error:");
+            System.out.println(e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Order failed: " + e.getMessage());
         }
     }
 }

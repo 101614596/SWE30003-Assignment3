@@ -1,5 +1,6 @@
 import javax.xml.crypto.Data;
 import java.util.Scanner;
+import exceptions.InvalidCredentialsException; // ADD THIS
 
 public class Main {
     public static void main(String[] args) {
@@ -79,17 +80,16 @@ public class Main {
                 } else {
                     System.out.print("Password: ");
                     String password = scanner.nextLine();
-                    if (!customer.authenticate(password)) {
-                        System.out.println("Invalid password!");
+
+                    // MODIFIED - now handles exception
+                    try {
+                        customer.authenticate(password);
+                        System.out.println("✓ Login successful! Welcome back, " + customer.getName());
+                    } catch (InvalidCredentialsException e) {
+                        System.out.println("Error: " + e.getMessage());
                         System.exit(0);
                     }
-                    System.out.println("✓ Login successful! Welcome back, " + customer.getName());
                 }
-
-                // === Set up order system and observers ===
-                OrderProcessor orderProcessor = new OrderProcessor(inventory, catalog);
-                StatisticsGenerator statsGen = new StatisticsGenerator(); // observer
-                orderProcessor.registerObserver(statsGen);
 
                 MainMenu menu = new MainMenu(catalog, inventory, customer);
                 menu.start();

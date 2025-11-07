@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import exceptions.InsufficientStockException; // ADD THIS
 
 public class ShoppingCart {
 
@@ -10,24 +11,23 @@ public class ShoppingCart {
         this.inventory = inventory;
     }
 
-
-    public void addItem(Product product, int quantity) {
+    // MODIFIED METHOD - now throws exception
+    public void addItem(Product product, int quantity) throws InsufficientStockException {
         if (product == null) {
-            System.out.println("Invalid product.");
-            return;
+            throw new IllegalArgumentException("Invalid product.");
         }
 
         cleanExpiredItems();
 
         int available = inventory.getStock(product.getId());
+
+
         if (available <= 0) {
-            System.out.println("Product out of stock.");
-            return;
+            throw new InsufficientStockException(product.getId(), quantity, 0);
         }
 
         if (quantity > available) {
-            System.out.println("Only " + available + " units available. Adding " + available + " instead.");
-            quantity = available;
+            throw new InsufficientStockException(product.getId(), quantity, available);
         }
 
         // Check if item already exists in cart
@@ -48,8 +48,8 @@ public class ShoppingCart {
                     System.out.println(quantity + "x " + product.getName() + " added to cart.");
                     return;
                 } else {
-                    System.out.println("Cannot reserve additional stock.");
-                    return;
+                    throw new InsufficientStockException(product.getId(), additionalQuantity,
+                            inventory.getStock(product.getId()));
                 }
             }
         }
@@ -59,7 +59,8 @@ public class ShoppingCart {
             items.add(new CartItem(product, quantity));
             System.out.println("Added " + quantity + " x " + product.getName() + " to cart.");
         } else {
-            System.out.println("Cannot reserve stock for " + product.getName());
+            throw new InsufficientStockException(product.getId(), quantity,
+                    inventory.getStock(product.getId()));
         }
     }
 
@@ -81,8 +82,6 @@ public class ShoppingCart {
             System.out.println("Item not found in cart.");
         }
     }
-
-
 
     public void cleanExpiredItems() {
         List<CartItem> expired = new ArrayList<>();
@@ -136,7 +135,6 @@ public class ShoppingCart {
     public List<CartItem> getItems() {return items;}
 
     public void clearCart() {
-
         for ( CartItem item : items) {
             inventory.restock(item.getProduct().getId(), item.getQuantity());
         }
