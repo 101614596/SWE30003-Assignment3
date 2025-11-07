@@ -54,7 +54,7 @@ public class MainMenu {
         }
     }
 
-    // MODIFIED - now handles exception
+
     private void addToCart() {
         catalog.displayAll();
         System.out.print("Enter Product ID to add: ");
@@ -90,7 +90,7 @@ public class MainMenu {
         cart.removeItem(productId);
     }
 
-    // MODIFIED - now handles exceptions
+
     private void checkout() {
         if (cart.getItems().isEmpty()) {
             System.out.println("Your cart is empty.");

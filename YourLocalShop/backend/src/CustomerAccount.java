@@ -73,21 +73,21 @@ public class CustomerAccount {
         return null;
     }
 
-    // --- Authentication --- MODIFIED to throw exception
+    // Authentication
     public void authenticate(String inputPassword) throws InvalidCredentialsException {
         if (!this.password.equals(inputPassword)) {
             throw new InvalidCredentialsException("Invalid password for user: " + this.username);
         }
     }
 
-    // --- Personal Info ---
+    //  Personal Info
     public void updateContactInfo(String email, String phone, String address) {
         this.email = email;
         this.phone = phone;
         this.address = address;
     }
 
-    // --- Orders & Invoices ---
+    //  Orders & Invoices
     public void addOrder(Order order) {
         orderHistory.add(order);
     }
@@ -104,7 +104,7 @@ public class CustomerAccount {
         return invoices;
     }
 
-    // --- Getters ---
+    // Getters
     public String getUsername() { return username; }
     public String getName() { return name; }
     public String getEmail() { return email; }

@@ -1,6 +1,6 @@
 import javax.xml.crypto.Data;
 import java.util.Scanner;
-import exceptions.InvalidCredentialsException; // ADD THIS
+import exceptions.InvalidCredentialsException;
 
 public class Main {
     public static void main(String[] args) {
@@ -28,7 +28,7 @@ public class Main {
             finalDb.close();
         }));
 
-        // Ask user which mode to run
+
         Scanner scanner = new Scanner(System.in);
         System.out.println("Select mode:");
         System.out.println("1. Web Server (for frontend)");
@@ -39,13 +39,13 @@ public class Main {
 
         try {
             if (choice.equals("1")) {
-                // Start web server
+
                 Webserver.start(catalog, inventory);
                 System.out.println("\n✓ Web server is running!");
                 System.out.println("✓ Open frontend/index.html in your browser");
                 System.out.println("✓ Press Ctrl+C to stop\n");
 
-                // Keep server running
+
                 Thread.currentThread().join();
 
             } else if (choice.equals("3")) {

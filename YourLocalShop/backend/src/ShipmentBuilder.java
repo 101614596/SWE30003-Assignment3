@@ -2,7 +2,7 @@ public class ShipmentBuilder {
     private String shipmentId;
     private Order order;
     private String deliveryAddress;
-    private String carrier = "AUSPOST"; // Default carrier
+    private String carrier = "AUSPOST";
 
     public ShipmentBuilder setShipmentId(String shipmentId) {
         this.shipmentId = shipmentId;

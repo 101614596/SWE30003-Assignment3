@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
-import exceptions.InsufficientStockException; // ADD THIS
+import exceptions.InsufficientStockException;
 
 public class ShoppingCart {
 
@@ -11,7 +11,7 @@ public class ShoppingCart {
         this.inventory = inventory;
     }
 
-    // MODIFIED METHOD - now throws exception
+
     public void addItem(Product product, int quantity) throws InsufficientStockException {
         if (product == null) {
             throw new IllegalArgumentException("Invalid product.");

@@ -227,7 +227,7 @@ public class Webserver {
             String method = exchange.getRequestMethod();
             System.out.println("Order request: " + method + " " + path);
 
-            // NEW: Handle order history requests
+            //Handle order history requests
             if ("GET".equals(method) && path.startsWith("/api/orders/history/")) {
                 String[] parts = path.split("/");
                 if (parts.length > 4) {

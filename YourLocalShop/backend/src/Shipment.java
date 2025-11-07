@@ -19,7 +19,7 @@ public class Shipment {
         this.status = ShipmentStatus.PENDING;
     }
 
-    // --- Shipment creation ---
+    //  Shipment creation
     private String generateTrackingNumber() {
         return "TRK-" + (int)(Math.random() * 1000000);
     }
@@ -38,7 +38,7 @@ public class Shipment {
         this.status = newStatus;
     }
 
-    // --- Getters ---
+    //  Getters
     public String getShipmentId() { return shipmentId; }
     public Order getOrder() { return order; }
     public String getDeliveryAddress() { return deliveryAddress; }

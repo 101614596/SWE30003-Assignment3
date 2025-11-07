@@ -9,7 +9,7 @@ public class Product {
     private double price;
     private int quantity;
     private boolean available;
-    private double discountPercentage; // NEW: for discount calculation
+    private double discountPercentage;
 
     public Product(String id, String name, String category, String description, double price, int quantity) {
         this.id = id;
@@ -32,7 +32,7 @@ public class Product {
     public boolean isAvailable() { return available; }
     public double getDiscountPercentage() { return discountPercentage; }
 
-    // NEW: Calculate discounted price
+    //Calculate discounted price
     public double getDiscountedPrice() {
         if (discountPercentage <= 0) {
             return price;
@@ -58,7 +58,7 @@ public class Product {
         updateInDatabase();
     }
 
-    // NEW: Set discount
+    //Set discount
     public void setDiscountPercentage(double discountPercentage) {
         if (discountPercentage < 0 || discountPercentage > 100) {
             throw new IllegalArgumentException("Discount percentage must be between 0 and 100.");

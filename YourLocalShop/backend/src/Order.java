@@ -57,7 +57,7 @@ public class Order {
         this.status = ShipmentStatus.CONFIRMED;
     }
 
-    // --- Getters ---
+    //Getters
     public String getOrderId() { return orderId; }
     public List<OrderItem> getItems() { return items; }
     public double getSubtotal() { return subtotal; }
