@@ -17,10 +17,10 @@ public class ProductCatalog {
     private DatabaseConnection dbConnection;
 
     private ProductCatalog() {
-        this.dbConnection = DatabaseConnection.getInstance(); 
+        this.dbConnection = DatabaseConnection.getInstance();
     }
-    
-    
+
+
     public static ProductCatalog getInstance() {
         if (instance == null) {
             instance = new ProductCatalog();
@@ -38,7 +38,7 @@ public class ProductCatalog {
         }
     }
 
-    //Loading from json
+    // Loading from json
     public void loadProductsJSON(String filePath) {
         Gson gson = new Gson();
         try (FileReader reader = new FileReader(filePath)) {
@@ -49,6 +49,7 @@ public class ProductCatalog {
         }
     }
 
+    // UPDATED: Now loads discount from database
     public void loadProductsDatabase() {
         products.clear();
         String query = "SELECT * FROM products";
@@ -56,30 +57,37 @@ public class ProductCatalog {
         try (java.sql.Statement stmt = dbConnection.getConnection().createStatement(); ResultSet rs = stmt.executeQuery(query)) {
 
             while (rs.next()) {
+                // Try to get discount, default to 0 if column doesn't exist
+                double discount = 0.0;
+                try {
+                    discount = rs.getDouble("discount_percentage");
+                } catch (SQLException e) {
+                    // Column doesn't exist yet, use default
+                }
+
                 Product p = new Product(
-                        rs.getString("ID"),
+                        rs.getString("id"),
                         rs.getString("name"),
                         rs.getString("category"),
                         rs.getString("description"),
                         rs.getDouble("price"),
-                        rs.getInt("quantity")
+                        rs.getInt("quantity"),
+                        discount  // ADDED
                 );
                 products.add(p);
-
-
             }
 
-            System.out.println("Loaded:  " + products.size() + " (from database)");
+            System.out.println("Loaded: " + products.size() + " products (from database)");
 
         } catch (SQLException e) {
-
             System.err.println("Error loading products from database: " + e.getMessage());
         }
     }
 
+
     private void syncProductsToDatabase() {
-        String insertSQL= "INSERT OR REPLACE INTO products (id, name, category, description,price, quantity, available) VALUES (?,?,?,?,?,?,?)" ;
-        
+        String insertSQL = "INSERT OR REPLACE INTO products (id, name, category, description, price, quantity, available, discount_percentage) VALUES (?,?,?,?,?,?,?,?)";
+
         try (PreparedStatement pstmt = dbConnection.getConnection().prepareStatement(insertSQL)){
 
             for(Product p : products){
@@ -91,14 +99,15 @@ public class ProductCatalog {
                 pstmt.setDouble(5, p.getPrice());
                 pstmt.setInt(6, p.getQuantity());
                 pstmt.setInt(7, p.isAvailable()? 1:0);
+                pstmt.setDouble(8, p.getDiscountPercentage()); // ADDED
                 pstmt.executeUpdate();
 
             }
-            System.out.println("Synced" +products.size() + "products to databse");
+            System.out.println("Synced " + products.size() + " products to database");
         } catch (Exception e) {
-            System.err.println("Error syncing product: " +e.getMessage());
+            System.err.println("Error syncing products: " + e.getMessage());
         }
-      
+
     }
 
     public List<Product> getAllProducts() {
@@ -129,18 +138,17 @@ public class ProductCatalog {
         for (Product p : products) {
             System.out.println(p);
         }
-
     }
-//    Add new products via admin page
+
+    // Add new products via admin page
     public void adminAddProduct(Product p) {
         if (getProductById(p.getId()) != null) {
-
             throw new IllegalArgumentException("ID exists: " + p.getId());
-
         }
         products.add(p);
     }
-    //    Delete existing products via admin apge
+
+    // Delete existing products via admin page
     public boolean deleteProductById(String id) {
         Product p = getProductById(id);
         if (p == null) return false;

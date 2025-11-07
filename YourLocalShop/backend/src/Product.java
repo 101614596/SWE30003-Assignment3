@@ -19,7 +19,19 @@ public class Product {
         this.price = price;
         this.quantity = quantity;
         this.available = quantity > 0;
-        this.discountPercentage = 0.0; // No discount by default
+        this.discountPercentage = 0.0;
+    }
+
+
+    public Product(String id, String name, String category, String description, double price, int quantity, double discountPercentage) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.description = description;
+        this.price = price;
+        this.quantity = quantity;
+        this.available = quantity > 0;
+        this.discountPercentage = discountPercentage;
     }
 
     // Getters
@@ -32,7 +44,7 @@ public class Product {
     public boolean isAvailable() { return available; }
     public double getDiscountPercentage() { return discountPercentage; }
 
-    //Calculate discounted price
+    // Calculate discounted price
     public double getDiscountedPrice() {
         if (discountPercentage <= 0) {
             return price;
@@ -47,7 +59,6 @@ public class Product {
         updateInDatabase();
     }
 
-    // Admin edit setters
     public void setName(String name) { this.name = name; }
     public void setCategory(String category) { this.category = category; }
     public void setDescription(String description) { this.description = description; }
@@ -58,7 +69,6 @@ public class Product {
         updateInDatabase();
     }
 
-    //Set discount
     public void setDiscountPercentage(double discountPercentage) {
         if (discountPercentage < 0 || discountPercentage > 100) {
             throw new IllegalArgumentException("Discount percentage must be between 0 and 100.");
@@ -67,14 +77,16 @@ public class Product {
         updateInDatabase();
     }
 
+
     private void updateInDatabase() {
         DatabaseConnection db = DatabaseConnection.getInstance();
-        String updateSQL = "UPDATE products SET quantity = ?, available = ?, price = ? WHERE id = ?";
+        String updateSQL = "UPDATE products SET quantity = ?, available = ?, price = ?, discount_percentage = ? WHERE id = ?";
         try (PreparedStatement pstmt = db.getConnection().prepareStatement(updateSQL)){
             pstmt.setInt(1, this.quantity);
             pstmt.setInt(2, this.available ? 1: 0);
             pstmt.setDouble(3, this.price);
-            pstmt.setString(4, this.id);
+            pstmt.setDouble(4, this.discountPercentage);  // ADDED
+            pstmt.setString(5, this.id);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {

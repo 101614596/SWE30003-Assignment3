@@ -4,7 +4,7 @@ public class DatabaseConnection {
 
     private static DatabaseConnection instance;
     private Connection connection;
-    private static final String DB_URL = "jdbc:sqlite:store.db"; 
+    private static final String DB_URL = "jdbc:sqlite:store.db";
 
     private DatabaseConnection() {
 
@@ -22,28 +22,26 @@ public class DatabaseConnection {
             System.err.println("Please add sqlite-jdbc JAR to classpath");
             e.printStackTrace();
         }
-
-
     }
 
     public static DatabaseConnection getInstance() {
         if (instance == null) {
-            instance = new DatabaseConnection(); 
+            instance = new DatabaseConnection();
         }
-        return instance; 
+        return instance;
     }
 
     public Connection getConnection() {
         if (connection ==null){
             throw new IllegalStateException("Database connection is not initialized");
         }
-        return connection; 
+        return connection;
     }
 
     public void initializeTables(){
         try (Statement stmt = connection.createStatement()) {
-            
-            // Products table
+
+            // Products table - UPDATED to include discount_percentage
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS products (
                     id TEXT PRIMARY KEY,
@@ -52,10 +50,19 @@ public class DatabaseConnection {
                     description TEXT,
                     price REAL NOT NULL,
                     quantity INTEGER NOT NULL,
-                    available INTEGER NOT NULL
+                    available INTEGER NOT NULL,
+                    discount_percentage REAL DEFAULT 0.0
                 )
             """);
-            
+
+            // Add discount_percentage column if it doesn't exist (for existing databases)
+            try {
+                stmt.execute("ALTER TABLE products ADD COLUMN discount_percentage REAL DEFAULT 0.0");
+                System.out.println("Added discount_percentage column to products table");
+            } catch (SQLException e) {
+                // Column already exists, ignore
+            }
+
             // Customers table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS customers (
@@ -67,7 +74,7 @@ public class DatabaseConnection {
                     address TEXT
                 )
             """);
-            
+
             // Orders table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS orders (
@@ -81,7 +88,7 @@ public class DatabaseConnection {
                     FOREIGN KEY (customer_username) REFERENCES customers(username)
                 )
             """);
-            
+
             // Order Items table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS order_items (
@@ -96,7 +103,7 @@ public class DatabaseConnection {
                     FOREIGN KEY (product_id) REFERENCES products(id)
                 )
             """);
-            
+
             // Shipments table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS shipments (
@@ -111,7 +118,7 @@ public class DatabaseConnection {
                     FOREIGN KEY (order_id) REFERENCES orders(order_id)
                 )
             """);
-            
+
             // Invoices table
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS invoices (
@@ -123,10 +130,10 @@ public class DatabaseConnection {
                     FOREIGN KEY (customer_username) REFERENCES customers(username)
                 )
             """);
-        
-            System.out.println("Table initialized succefully");
+
+            System.out.println("Tables initialized successfully");
         }catch(SQLException e){
-            System.err.println("Error initializing table: " +e.getMessage());
+            System.err.println("Error initializing tables: " +e.getMessage());
         }
 
     }
@@ -135,15 +142,16 @@ public class DatabaseConnection {
         try {
             if(connection != null && !connection.isClosed()){
                 connection.close();
-                System.out.println("Database connection close");
+                System.out.println("Database connection closed");
             }
         } catch (SQLException e) {
             System.out.println("Error closing connection: " +e.getMessage());
         }
     }
-//    Add item procedure
+
+
     public void insertNewProduct(Product p) {
-        String sql = "INSERT INTO products (id, name, category, description, price, quantity, available) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO products (id, name, category, description, price, quantity, available, discount_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, p.getId());
@@ -153,11 +161,11 @@ public class DatabaseConnection {
             ps.setDouble(5, p.getPrice());
             ps.setInt(6, p.getQuantity());
             ps.setInt(7, 1); // available flag
+            ps.setDouble(8, p.getDiscountPercentage()); // ADDED
             ps.executeUpdate();
 
         } catch (SQLException e) {
             System.out.println("DB Insert failed: " + e.getMessage());
         }
     }
-
 }
