@@ -235,7 +235,7 @@ class ShopApp {
                     this.renderProducts(filtered);
                 } catch (error) {
                     console.error('Filter error:', error);
-                    // Fallback to client-side filtering
+
                     const filtered = this.products.filter(p => p.category === e.target.value);
                     this.renderProducts(filtered);
                 }
