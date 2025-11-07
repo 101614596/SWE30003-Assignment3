@@ -1,5 +1,3 @@
-package builders;
-
 public class InvoiceBuilder {
     private Order order;
     private CustomerAccount customer;

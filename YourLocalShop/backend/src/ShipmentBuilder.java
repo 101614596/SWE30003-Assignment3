@@ -1,5 +1,3 @@
-package builders;
-
 public class ShipmentBuilder {
     private String shipmentId;
     private Order order;

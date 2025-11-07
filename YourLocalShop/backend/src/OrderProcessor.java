@@ -4,10 +4,6 @@ import java.util.List;
 import exceptions.InsufficientStockException;
 import exceptions.PaymentProcessException;
 
-import builders.OrderBuilder;
-import builders.ShipmentBuilder;
-import builders.InvoiceBuilder;
-
 public class OrderProcessor {
 
     private final InventoryManager inventory;
