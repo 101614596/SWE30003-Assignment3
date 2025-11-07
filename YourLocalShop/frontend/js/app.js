@@ -2,6 +2,8 @@ class ShopApp {
     constructor() {
         this.cart = [];
         this.products = [];
+        this.currentUser = null;
+        this.categories = new Set();
         this.init();
     }
 
@@ -11,16 +13,39 @@ class ShopApp {
         this.setupEventListeners();
         this.renderProducts();
         this.updateCartDisplay();
+        this.populateCategories();
+        this.checkLoginStatus();
     }
 
     async loadProducts() {
         try {
             this.products = await API.getAllProducts();
             console.log('Loaded products:', this.products);
+
+            // Extract unique categories
+            this.products.forEach(product => {
+                if (product.category) {
+                    this.categories.add(product.category);
+                }
+            });
         } catch (error) {
             console.error('Failed to load products:', error);
             this.showError('Failed to load products. Please refresh the page.');
         }
+    }
+
+    populateCategories() {
+        const categoryFilter = document.getElementById('category-filter');
+        // Clear existing options except "All Categories"
+        categoryFilter.innerHTML = '<option value="">All Categories</option>';
+
+        // Add dynamic categories
+        Array.from(this.categories).sort().forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categoryFilter.appendChild(option);
+        });
     }
 
     async loadCart() {
@@ -31,6 +56,14 @@ class ShopApp {
         } catch (error) {
             console.error('Failed to load cart:', error);
             this.cart = [];
+        }
+    }
+
+    checkLoginStatus() {
+        const userInfo = localStorage.getItem('userInfo');
+        if (userInfo) {
+            this.currentUser = JSON.parse(userInfo);
+            this.showAccountInfo();
         }
     }
 
@@ -46,13 +79,21 @@ class ShopApp {
         productsToRender.forEach(product => {
             const card = document.createElement('div');
             card.className = 'product-card';
-            const isOutOfStock = product.quantity === 0;
+            const isOutOfStock = product.quantity === 0 || !product.available;
+
+            // Calculate display price (with discount if applicable)
+            const displayPrice = product.discountedPrice || product.price;
+            const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
 
             card.innerHTML = `
                 <h3>${product.name}</h3>
                 <p class="category">${product.category}</p>
                 <p>${product.description}</p>
-                <p class="price">$${product.price.toFixed(2)}</p>
+                <p class="price">
+                    ${hasDiscount ? `<span class="original-price">$${product.price.toFixed(2)}</span>` : ''}
+                    $${displayPrice.toFixed(2)}
+                    ${hasDiscount ? '<span class="discount-badge">SALE</span>' : ''}
+                </p>
                 <p class="stock" style="color: ${isOutOfStock ? 'red' : '#7f8c8d'}">
                     ${product.quantity} in stock ${isOutOfStock ? '⚠️' : ''}
                 </p>
@@ -76,7 +117,6 @@ class ShopApp {
             return;
         }
 
-        // Check local stock first
         const product = this.products.find(p => p.id === productId);
         if (!product) {
             this.showError('Product not found');
@@ -96,19 +136,15 @@ class ShopApp {
             this.cart = response;
             this.updateCartDisplay();
 
-            // Reload products to get updated stock counts
             await this.loadProducts();
             this.renderProducts();
 
             this.showSuccess(`${product.name} added to cart!`);
-
-            // Reset quantity input
             qtyInput.value = 1;
         } catch (error) {
             console.error('Add to cart error:', error);
             this.showError('Failed to add item: ' + error.message);
         }
-
 
         await this.loadProducts();
         this.renderProducts();
@@ -119,7 +155,6 @@ class ShopApp {
         const totalItems = this.cart.reduce((sum, item) => sum + item.quantity, 0);
         cartCount.textContent = totalItems;
 
-        // Update cart section
         const cartItems = document.getElementById('cart-items');
         if (this.cart.length === 0) {
             cartItems.innerHTML = '<p>Your cart is empty</p>';
@@ -166,7 +201,6 @@ class ShopApp {
             this.cart = response;
             this.updateCartDisplay();
 
-            // Reload products to restore stock counts
             await this.loadProducts();
             this.renderProducts();
 
@@ -178,30 +212,25 @@ class ShopApp {
     }
 
     showSection(sectionId) {
-        // Hide all sections
         document.getElementById('products').classList.add('hidden');
         document.getElementById('cart').classList.add('hidden');
+        document.getElementById('account').classList.add('hidden');
 
-        // Show requested section
         document.getElementById(sectionId).classList.remove('hidden');
     }
 
-    // NEW: Show error message to user
     showError(message) {
-        // Create toast notification
         const toast = document.createElement('div');
         toast.className = 'toast toast-error';
         toast.textContent = '❌ ' + message;
         document.body.appendChild(toast);
 
-        // Auto remove after 4 seconds
         setTimeout(() => {
             toast.classList.add('toast-fade-out');
             setTimeout(() => toast.remove(), 300);
         }, 4000);
     }
 
-    // NEW: Show success message to user
     showSuccess(message) {
         const toast = document.createElement('div');
         toast.className = 'toast toast-success';
@@ -212,6 +241,54 @@ class ShopApp {
             toast.classList.add('toast-fade-out');
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+
+    // Account functionality
+    showAccountInfo() {
+        document.getElementById('account-login').classList.add('hidden');
+        document.getElementById('account-register').classList.add('hidden');
+        document.getElementById('account-info').classList.remove('hidden');
+
+        const userInfoDiv = document.getElementById('user-info');
+        userInfoDiv.innerHTML = `
+            <p><strong>Name:</strong> ${this.currentUser.name}</p>
+            <p><strong>Email:</strong> ${this.currentUser.email}</p>
+            <p><strong>Phone:</strong> ${this.currentUser.phone}</p>
+            <p><strong>Address:</strong> ${this.currentUser.address}</p>
+        `;
+
+        this.loadOrderHistory();
+    }
+
+    async loadOrderHistory() {
+        const orderHistoryDiv = document.getElementById('order-history');
+        orderHistoryDiv.innerHTML = '<p>Loading order history...</p>';
+
+        try {
+            const orders = await API.getOrderHistory(this.currentUser.email);
+
+            if (!orders || orders.length === 0) {
+                orderHistoryDiv.innerHTML = '<p>No orders yet</p>';
+                return;
+            }
+
+            orderHistoryDiv.innerHTML = '';
+            orders.forEach(order => {
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'order-history-item';
+                orderDiv.innerHTML = `
+                    <h4>Order #${order.orderId}</h4>
+                    <p>Date: ${new Date(order.orderDate).toLocaleDateString()}</p>
+                    <p>Total: $${order.total.toFixed(2)}</p>
+                    <p>Status: ${order.status}</p>
+                    ${order.trackingNumber ? `<p>Tracking: ${order.trackingNumber}</p>` : ''}
+                `;
+                orderHistoryDiv.appendChild(orderDiv);
+            });
+        } catch (error) {
+            console.error('Failed to load order history:', error);
+            orderHistoryDiv.innerHTML = '<p>Failed to load order history</p>';
+        }
     }
 
     setupEventListeners() {
@@ -235,14 +312,13 @@ class ShopApp {
                     this.renderProducts(filtered);
                 } catch (error) {
                     console.error('Filter error:', error);
-
                     const filtered = this.products.filter(p => p.category === e.target.value);
                     this.renderProducts(filtered);
                 }
             }
         });
 
-        // Navigation - Products link
+        // Navigation
         const productsLinks = document.querySelectorAll('a[href="#products"]');
         productsLinks.forEach(link => {
             link.addEventListener('click', (e) => {
@@ -251,19 +327,44 @@ class ShopApp {
             });
         });
 
-        // Navigation - Cart link
         document.getElementById('cart-link').addEventListener('click', (e) => {
             e.preventDefault();
             this.showSection('cart');
         });
 
-        // Navigation - Account link (placeholder)
         const accountLinks = document.querySelectorAll('a[href="#account"]');
         accountLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showError('Account section coming soon!');
+                this.showSection('account');
             });
+        });
+
+        // Account forms
+        document.getElementById('show-register').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('account-login').classList.add('hidden');
+            document.getElementById('account-register').classList.remove('hidden');
+        });
+
+        document.getElementById('show-login').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('account-register').classList.add('hidden');
+            document.getElementById('account-login').classList.remove('hidden');
+        });
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleLogin();
+        });
+
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleRegister();
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            this.handleLogout();
         });
 
         // Checkout
@@ -272,6 +373,15 @@ class ShopApp {
                 this.showError('Your cart is empty');
                 return;
             }
+
+            // Pre-fill if user is logged in
+            if (this.currentUser) {
+                document.getElementById('customer-name').value = this.currentUser.name;
+                document.getElementById('customer-email').value = this.currentUser.email;
+                document.getElementById('customer-phone').value = this.currentUser.phone;
+                document.getElementById('customer-address').value = this.currentUser.address;
+            }
+
             document.getElementById('checkout-modal').classList.remove('hidden');
         });
 
@@ -283,6 +393,47 @@ class ShopApp {
             e.preventDefault();
             await this.processCheckout();
         });
+    }
+
+    handleLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        // Simple mock authentication - in production, this would call the backend
+        const mockUser = {
+            name: 'Test User',
+            email: email,
+            phone: '1234567890',
+            address: '123 Test St, Melbourne VIC 3000'
+        };
+
+        localStorage.setItem('userInfo', JSON.stringify(mockUser));
+        this.currentUser = mockUser;
+        this.showAccountInfo();
+        this.showSuccess('Logged in successfully!');
+    }
+
+    handleRegister() {
+        const userData = {
+            name: document.getElementById('register-name').value,
+            email: document.getElementById('register-email').value,
+            phone: document.getElementById('register-phone').value,
+            address: document.getElementById('register-address').value
+        };
+
+        localStorage.setItem('userInfo', JSON.stringify(userData));
+        this.currentUser = userData;
+        this.showAccountInfo();
+        this.showSuccess('Account created successfully!');
+    }
+
+    handleLogout() {
+        localStorage.removeItem('userInfo');
+        this.currentUser = null;
+        document.getElementById('account-info').classList.add('hidden');
+        document.getElementById('account-login').classList.remove('hidden');
+        document.getElementById('login-form').reset();
+        this.showSuccess('Logged out successfully!');
     }
 
     async processCheckout() {
@@ -300,7 +451,6 @@ class ShopApp {
             return;
         }
 
-        // Show loading state
         const submitBtn = document.querySelector('#checkout-form button[type="submit"]');
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
@@ -312,20 +462,11 @@ class ShopApp {
             console.log('Checkout response:', invoice);
 
             if (invoice.success) {
-                // Hide checkout modal
                 document.getElementById('checkout-modal').classList.add('hidden');
-
-                // Show invoice
                 this.displayInvoice(invoice);
-
-                // Clear cart
                 this.cart = [];
                 this.updateCartDisplay();
-
-                // Clear form
                 document.getElementById('checkout-form').reset();
-
-                // Reload products
                 await this.loadProducts();
                 this.renderProducts();
             } else {
@@ -336,7 +477,6 @@ class ShopApp {
             console.error('Checkout error:', error);
             this.showError('Checkout failed: ' + error.message);
         } finally {
-            // Restore button state
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
@@ -362,7 +502,6 @@ class ShopApp {
 
         document.getElementById('close-invoice').onclick = () => {
             document.getElementById('invoice-modal').classList.add('hidden');
-            // Go back to products page
             this.showSection('products');
         };
     }

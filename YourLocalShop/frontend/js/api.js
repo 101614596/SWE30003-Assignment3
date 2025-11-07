@@ -21,7 +21,6 @@ class API {
         } catch (error) {
             console.error('Fetch error:', error);
 
-            // More helpful error messages
             if (error.message.includes('Failed to fetch')) {
                 throw new Error('Cannot connect to server. Make sure the backend is running on port 8080.');
             }
@@ -77,5 +76,10 @@ class API {
             },
             body: JSON.stringify({ customerData, paymentMethod })
         });
+    }
+
+    // Order History (NEW)
+    static async getOrderHistory(email) {
+        return await this.fetchWithErrorHandling(`${API_BASE_URL}/orders/history/${encodeURIComponent(email)}`);
     }
 }

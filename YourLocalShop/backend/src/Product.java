@@ -9,6 +9,7 @@ public class Product {
     private double price;
     private int quantity;
     private boolean available;
+    private double discountPercentage; // NEW: for discount calculation
 
     public Product(String id, String name, String category, String description, double price, int quantity) {
         this.id = id;
@@ -18,6 +19,7 @@ public class Product {
         this.price = price;
         this.quantity = quantity;
         this.available = quantity > 0;
+        this.discountPercentage = 0.0; // No discount by default
     }
 
     // Getters
@@ -28,14 +30,24 @@ public class Product {
     public double getPrice() { return price; }
     public int getQuantity() { return quantity; }
     public boolean isAvailable() { return available; }
+    public double getDiscountPercentage() { return discountPercentage; }
+
+    // NEW: Calculate discounted price
+    public double getDiscountedPrice() {
+        if (discountPercentage <= 0) {
+            return price;
+        }
+        return price * (1 - discountPercentage / 100.0);
+    }
 
     // Setters
     public void setQuantity(int quantity) {
         this.quantity = quantity;
         this.available = quantity > 0;
-        updateInDatabase(); 
+        updateInDatabase();
     }
-//   admin edit setters
+
+    // Admin edit setters
     public void setName(String name) { this.name = name; }
     public void setCategory(String category) { this.category = category; }
     public void setDescription(String description) { this.description = description; }
@@ -46,26 +58,38 @@ public class Product {
         updateInDatabase();
     }
 
+    // NEW: Set discount
+    public void setDiscountPercentage(double discountPercentage) {
+        if (discountPercentage < 0 || discountPercentage > 100) {
+            throw new IllegalArgumentException("Discount percentage must be between 0 and 100.");
+        }
+        this.discountPercentage = discountPercentage;
+        updateInDatabase();
+    }
+
     private void updateInDatabase() {
         DatabaseConnection db = DatabaseConnection.getInstance();
-        String updateSQL = "UPDATE products SET quantity = ? , available = ?, price = ? WHERE id = ?";
-        try (PreparedStatement pstmt =db.getConnection().prepareStatement(updateSQL)){
+        String updateSQL = "UPDATE products SET quantity = ?, available = ?, price = ? WHERE id = ?";
+        try (PreparedStatement pstmt = db.getConnection().prepareStatement(updateSQL)){
             pstmt.setInt(1, this.quantity);
             pstmt.setInt(2, this.available ? 1: 0);
-            pstmt.setDouble(3, this.price); 
+            pstmt.setDouble(3, this.price);
             pstmt.setString(4, this.id);
-            pstmt.executeUpdate(); 
-
+            pstmt.executeUpdate();
 
         } catch (SQLException e) {
-            System.err.println("Error updating product info in database: " +e.getMessage());
+            System.err.println("Error updating product info in database: " + e.getMessage());
         }
-
     }
 
     @Override
     public String toString() {
-        return String.format("[%s] %s (%s) - $%.2f [%d in stock]",
-                id, name, category, price, quantity);
+        String priceInfo = String.format("$%.2f", price);
+        if (discountPercentage > 0) {
+            priceInfo = String.format("$%.2f (%.0f%% off - was $%.2f)",
+                    getDiscountedPrice(), discountPercentage, price);
+        }
+        return String.format("[%s] %s (%s) - %s [%d in stock]",
+                id, name, category, priceInfo, quantity);
     }
 }
