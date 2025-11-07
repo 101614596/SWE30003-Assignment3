@@ -20,7 +20,7 @@ public class Order {
         this.orderDate = LocalDateTime.now();
     }
 
-    // --- Add or remove products ---
+    // Add or remove products
     public void addProduct(Product product, int quantity) {
         if (!product.isAvailable() || product.getQuantity() < quantity) {
             throw new IllegalStateException("Product not available or insufficient stock.");
@@ -34,14 +34,14 @@ public class Order {
         updateTotals();
     }
 
-    // --- Calculations ---
+    // Calculations
     private void updateTotals() {
         subtotal = items.stream().mapToDouble(OrderItem::getSubtotal).sum();
         tax = subtotal * 0.10; // Example: 10% tax
         total = subtotal + tax;
     }
 
-    // --- Confirm and generate invoice ---
+    //Confirm and generate invoice
     public Invoice generateInvoice() {
         if (status != ShipmentStatus.CONFIRMED)
             throw new IllegalStateException("Order must be confirmed before generating invoice.");
@@ -65,6 +65,7 @@ public class Order {
     public double getTotal() { return total; }
     public ShipmentStatus getStatus() { return status; }
     public LocalDateTime getOrderDate() { return orderDate; }
+    public CustomerAccount getCustomer() { return customer; }
 
     @Override
     public String toString() {
